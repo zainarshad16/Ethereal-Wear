@@ -85,7 +85,14 @@ export default function WishlistPage() {
                   </div>
                 </Link>
                 <div className="mt-4">
-                  <AddToCartButton product={item} />
+                  <AddToCartButton product={{
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    imageUrl: item.imageUrl,
+                    stock: 10,
+                    sizeStock: null,
+                  }} />
                 </div>
               </div>
             ))}

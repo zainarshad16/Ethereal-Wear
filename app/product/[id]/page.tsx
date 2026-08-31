@@ -38,6 +38,8 @@ export default async function ProductPage({
         sizeStock: { XS: 2, S: 3, M: 2, L: 2, XL: 1 },
         sku: "MOCK-123",
         isFeatured: false,
+        isOnSale: false,
+        salePercentage: null,
         orderIndex: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -47,17 +49,23 @@ export default async function ProductPage({
     }
   }
 
+  if (!product) {
+    notFound();
+  }
+
+  const currentProduct = product;
+
   const relatedProducts = await prisma.product.findMany({
     where: { 
-      category: product.category,
-      id: { not: product.id }
+      category: currentProduct.category,
+      id: { not: currentProduct.id }
     },
     take: 4
   });
 
-  const imagesToPass = product.images && Array.isArray(product.images) && product.images.length > 0 
-    ? product.images 
-    : [product.imageUrl, product.hoverImageUrl].filter(Boolean) as string[];
+  const imagesToPass = currentProduct.images && Array.isArray(currentProduct.images) && currentProduct.images.length > 0 
+    ? currentProduct.images 
+    : [currentProduct.imageUrl, currentProduct.hoverImageUrl].filter(Boolean) as string[];
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-gray-200">
@@ -66,9 +74,9 @@ export default async function ProductPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex space-x-2 text-xs font-medium text-gray-400 uppercase tracking-widest">
         <Link href="/" className="hover:text-black transition-colors">Home</Link>
         <span>/</span>
-        <Link href={`/shop?category=${product.category}`} className="hover:text-black transition-colors">{product.category}</Link>
+        <Link href={`/shop?category=${currentProduct.category}`} className="hover:text-black transition-colors">{currentProduct.category}</Link>
         <span>/</span>
-        <span className="text-black">{product.name}</span>
+        <span className="text-black">{currentProduct.name}</span>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
@@ -76,25 +84,25 @@ export default async function ProductPage({
           
           {/* Left Column: Gallery */}
           <div className="h-full">
-             <ProductGallery images={imagesToPass} productName={product.name} />
+             <ProductGallery images={imagesToPass} productName={currentProduct.name} />
           </div>
 
           {/* Right Column: Details */}
           <div className="flex flex-col pt-2 lg:pl-10">
-            {product.stock <= 0 ? (
+            {currentProduct.stock <= 0 ? (
               <span className="inline-block bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded w-fit mb-4">Out Of Stock</span>
             ) : null}
 
             <p className="text-sm text-gray-500 mb-2">Ethereal Wear</p>
-            <h1 className="text-3xl md:text-4xl font-serif tracking-tight mb-6">{product.name}</h1>
+            <h1 className="text-3xl md:text-4xl font-serif tracking-tight mb-6">{currentProduct.name}</h1>
 
             <div className="flex items-center space-x-4 mb-8">
-              <p className="text-2xl font-semibold">Rs.{product.price.toFixed(2)}</p>
-              {product.isOnSale && (
+              <p className="text-2xl font-semibold">Rs.{currentProduct.price.toFixed(2)}</p>
+              {currentProduct.isOnSale && (
                 <>
-                  <p className="text-lg text-gray-400 line-through">Rs.{(product.price / (1 - (product.salePercentage || 0) / 100)).toFixed(2)}</p>
+                  <p className="text-lg text-gray-400 line-through">Rs.{(currentProduct.price / (1 - (currentProduct.salePercentage || 0) / 100)).toFixed(2)}</p>
                   <span className="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded uppercase">
-                    {product.salePercentage}% Off
+                    {currentProduct.salePercentage}% Off
                   </span>
                 </>
               )}
@@ -103,21 +111,25 @@ export default async function ProductPage({
             <div className="mb-6 w-full max-w-md">
               <AddToCartButton 
                 product={{
-                  id: product.id,
-                  name: product.name,
-                  price: product.price,
-                  imageUrl: product.imageUrl,
-                  stock: product.stock,
-                  sizeStock: product.sizeStock,
+                  id: currentProduct.id,
+                  name: currentProduct.name,
+                  price: currentProduct.price,
+                  imageUrl: currentProduct.imageUrl,
+                  stock: currentProduct.stock,
+                  sizeStock: currentProduct.sizeStock,
                 }} 
               />
               <div className="mt-4 flex items-center justify-end w-full relative">
                  <WishlistButton 
                     item={{
-                      id: product.id,
-                      name: product.name,
-                      price: product.price,
-                      imageUrl: product.imageUrl,
+                      id: currentProduct.id,
+                      name: currentProduct.name,
+                      price: currentProduct.price,
+                      imageUrl: currentProduct.imageUrl,
+                      hoverImageUrl: currentProduct.hoverImageUrl,
+                      category: currentProduct.category,
+                      isOnSale: currentProduct.isOnSale || false,
+                      salePercentage: currentProduct.salePercentage || null,
                     }}
                  />
               </div>
@@ -126,15 +138,15 @@ export default async function ProductPage({
             <div className="space-y-3 text-sm text-gray-600 mb-8 max-w-md">
               <div className="grid grid-cols-[100px_1fr]">
                 <span className="text-gray-400 uppercase tracking-widest text-xs">Sku:</span>
-                <span>{product.sku || "N/A"}</span>
+                <span>{currentProduct.sku || "N/A"}</span>
               </div>
               <div className="grid grid-cols-[100px_1fr]">
                 <span className="text-gray-400 uppercase tracking-widest text-xs">Available:</span>
-                <span>{product.stock > 0 ? "In Stock" : "Out of Stock"}</span>
+                <span>{currentProduct.stock > 0 ? "In Stock" : "Out of Stock"}</span>
               </div>
               <div className="grid grid-cols-[100px_1fr]">
                 <span className="text-gray-400 uppercase tracking-widest text-xs">Collections:</span>
-                <span>All Collection, NEW ARRIVAL, {product.category}</span>
+                <span>All Collection, NEW ARRIVAL, {currentProduct.category}</span>
               </div>
             </div>
 
@@ -157,7 +169,7 @@ export default async function ProductPage({
                 </summary>
                 <div 
                   className="pb-6 text-sm text-gray-600 leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
+                  dangerouslySetInnerHTML={{ __html: currentProduct.description || "" }}
                 />
               </details>
               

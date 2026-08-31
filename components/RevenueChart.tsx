@@ -82,7 +82,7 @@ export default function RevenueChart() {
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 itemStyle={{ color: '#111', fontSize: '12px', fontWeight: 'bold' }}
                 labelStyle={{ color: '#6b7280', fontSize: '10px', marginBottom: '4px' }}
-                formatter={(value: number) => [`Rs.${value.toFixed(2)}`, 'Revenue']}
+                formatter={(value: any) => [`Rs.${Number(value || 0).toFixed(2)}`, 'Revenue']}
               />
               <Area 
                 type="monotone" 

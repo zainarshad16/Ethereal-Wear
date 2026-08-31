@@ -21,7 +21,7 @@ export default function AdminSettingsPage() {
   });
 
   const [categories, setCategories] = useState<{title: string, link: string, img: string}[]>([]);
-  const [highlights, setHighlights] = useState<{title: string, subtitle: string, description: string, img: string, link: string}[]>([]);
+  const [highlights, setHighlights] = useState<{title: string, subtitle: string, description: string, img: string, link: string, bgColor?: string}[]>([]);
   const [reviews, setReviews] = useState<string[]>([]);
 
   useEffect(() => {

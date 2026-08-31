@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import ReCAPTCHA from "react-google-recaptcha";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -21,7 +21,7 @@ const signInSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export default function AuthPage() {
+function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialMode = searchParams.get("mode") === "register" ? "register" : "login";
@@ -59,7 +59,7 @@ export default function AuthPage() {
 
     const validationResult = signUpSchema.safeParse({ name, email, phone, address, password });
     if (!validationResult.success) {
-      toast.error(validationResult.error.errors[0].message);
+      toast.error(validationResult.error.issues[0]?.message || "Validation error");
       setSignUpLoading(false);
       return;
     }
@@ -120,7 +120,7 @@ export default function AuthPage() {
     
     const validationResult = signInSchema.safeParse({ email, password });
     if (!validationResult.success) {
-      toast.error(validationResult.error.errors[0].message);
+      toast.error(validationResult.error.issues[0]?.message || "Validation error");
       setLoading(false);
       return;
     }
@@ -320,5 +320,13 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center text-sm text-gray-500 font-sans">Loading...</div>}>
+      <AuthContent />
+    </Suspense>
   );
 }

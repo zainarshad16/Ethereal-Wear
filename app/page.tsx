@@ -18,30 +18,30 @@ export default async function Home() {
     prisma.storeSettings.findUnique({ where: { id: "global" } })
   ]);
 
-  const fallbackNewArrivals = [
-    { name: "White Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1583391733958-65e2be138092?q=80&w=600&auto=format&fit=crop" },
-    { name: "Black Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?q=80&w=600&auto=format&fit=crop" },
-    { name: "Crop White Button Down", price: 400, imageUrl: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?q=80&w=600&auto=format&fit=crop" },
-    { name: "Sleeveless Cotton Inner", price: 250, imageUrl: "https://images.unsplash.com/photo-1503342394128-c104d54dba01?q=80&w=600&auto=format&fit=crop" }
+  const fallbackNewArrivals: any[] = [
+    { id: "fallback-1", name: "White Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1582142306909-195724d33ab5?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
+    { id: "fallback-2", name: "Black Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
+    { id: "fallback-3", name: "Crop White Button Down", price: 400, imageUrl: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null },
+    { id: "fallback-4", name: "Sleeveless Cotton Inner", price: 250, imageUrl: "https://images.unsplash.com/photo-1503342394128-c104d54dba01?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null }
   ];
 
-  const fallbackSkirts = [
-    { name: "White Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1583391733958-65e2be138092?q=80&w=600&auto=format&fit=crop" },
-    { name: "Black Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?q=80&w=600&auto=format&fit=crop" },
-    { name: "Beige Cotton Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1584273143981-41c073dfe8f8?q=80&w=600&auto=format&fit=crop" },
-    { name: "Kids Cotton Skirts", price: 750, imageUrl: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=600&auto=format&fit=crop" }
+  const fallbackSkirts: any[] = [
+    { id: "fallback-s1", name: "White Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1582142306909-195724d33ab5?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
+    { id: "fallback-s2", name: "Black Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
+    { id: "fallback-s3", name: "Beige Cotton Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1584273143981-41c073dfe8f8?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
+    { id: "fallback-s4", name: "Kids Cotton Skirts", price: 750, imageUrl: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null }
   ];
 
-  const fallbackTops = [
-    { name: "Soft Mocha kurti", price: 750, imageUrl: "https://images.unsplash.com/photo-1618932260643-ee46255a61b8?q=80&w=600&auto=format&fit=crop" },
-    { name: "Cottage Graden Kurti", price: 700, imageUrl: "https://images.unsplash.com/photo-1582533555239-514c387063d9?q=80&w=600&auto=format&fit=crop" },
-    { name: "Gulbahaar Kurti", price: 700, imageUrl: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop" },
-    { name: "Powder Blue Kurti", price: 700, imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop" }
+  const fallbackTops: any[] = [
+    { id: "fallback-t1", name: "Soft Mocha kurti", price: 750, imageUrl: "https://images.unsplash.com/photo-1618932260643-ee46255a61b8?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null },
+    { id: "fallback-t2", name: "Cottage Graden Kurti", price: 700, imageUrl: "https://images.unsplash.com/photo-1582533555239-514c387063d9?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null },
+    { id: "fallback-t3", name: "Gulbahaar Kurti", price: 700, imageUrl: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null },
+    { id: "fallback-t4", name: "Powder Blue Kurti", price: 700, imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null }
   ];
 
-  const displayNewArrivals = newArrivals.length > 0 ? newArrivals : fallbackNewArrivals;
-  const displaySkirts = skirtsCollection.length > 0 ? skirtsCollection : fallbackSkirts;
-  const displayTops = topCollection.length > 0 ? topCollection : fallbackTops;
+  const displayNewArrivals: any[] = newArrivals.length > 0 ? newArrivals : fallbackNewArrivals;
+  const displaySkirts: any[] = skirtsCollection.length > 0 ? skirtsCollection : fallbackSkirts;
+  const displayTops: any[] = topCollection.length > 0 ? topCollection : fallbackTops;
 
   const defaultCategories = [
     { title: "NEW ARRIVAL", link: "/shop?category=New", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop" },

@@ -91,7 +91,8 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.id) {
+    const userId = (session?.user as any)?.id;
+    if (!userId) {
       return NextResponse.json({ error: "You must be logged in to checkout" }, { status: 401 });
     }
 
@@ -192,7 +193,7 @@ export async function POST(req: Request) {
     // Create Order
     const order = await prisma.order.create({
       data: {
-        userId: session.user.id,
+        userId,
         total,
         status: "PAID",
         items: {
