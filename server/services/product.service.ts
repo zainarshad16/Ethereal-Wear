@@ -25,78 +25,108 @@ export class ProductService {
     limit?: number;
     orderBy?: "asc" | "desc" | "orderIndex";
   }) {
-    const where: any = {};
+    try {
+      const where: any = {};
 
-    if (filters?.category && filters.category !== "All" && filters.category !== "New") {
-      where.category = { equals: filters.category, mode: "insensitive" };
+      if (filters?.category && filters.category !== "All" && filters.category !== "New") {
+        where.category = { equals: filters.category, mode: "insensitive" };
+      }
+
+      if (filters?.isFeatured !== undefined) {
+        where.isFeatured = filters.isFeatured;
+      }
+
+      if (filters?.isOnSale !== undefined) {
+        where.isOnSale = filters.isOnSale;
+      }
+
+      if (filters?.search) {
+        where.OR = [
+          { name: { contains: filters.search, mode: "insensitive" } },
+          { description: { contains: filters.search, mode: "insensitive" } },
+          { category: { contains: filters.search, mode: "insensitive" } },
+          { sku: { contains: filters.search, mode: "insensitive" } },
+        ];
+      }
+
+      let orderBy: any = { createdAt: "desc" };
+      if (filters?.orderBy === "asc") orderBy = { price: "asc" };
+      if (filters?.orderBy === "desc") orderBy = { price: "desc" };
+      if (filters?.orderBy === "orderIndex") orderBy = { orderIndex: "asc" };
+
+      return await prisma.product.findMany({
+        where,
+        orderBy,
+        take: filters?.limit,
+      });
+    } catch (e) {
+      console.error("FAILED_TO_GET_ALL_PRODUCTS:", e);
+      return [];
     }
-
-    if (filters?.isFeatured !== undefined) {
-      where.isFeatured = filters.isFeatured;
-    }
-
-    if (filters?.isOnSale !== undefined) {
-      where.isOnSale = filters.isOnSale;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        { name: { contains: filters.search, mode: "insensitive" } },
-        { description: { contains: filters.search, mode: "insensitive" } },
-        { category: { contains: filters.search, mode: "insensitive" } },
-        { sku: { contains: filters.search, mode: "insensitive" } },
-      ];
-    }
-
-    let orderBy: any = { createdAt: "desc" };
-    if (filters?.orderBy === "asc") orderBy = { price: "asc" };
-    if (filters?.orderBy === "desc") orderBy = { price: "desc" };
-    if (filters?.orderBy === "orderIndex") orderBy = { orderIndex: "asc" };
-
-    return prisma.product.findMany({
-      where,
-      orderBy,
-      take: filters?.limit,
-    });
   }
 
   static async getProductById(id: string) {
-    return prisma.product.findUnique({
-      where: { id },
-    });
+    try {
+      return await prisma.product.findUnique({
+        where: { id },
+      });
+    } catch (e) {
+      console.error("FAILED_TO_GET_PRODUCT_BY_ID:", e);
+      return null;
+    }
   }
 
   static async getDistinctCategories(): Promise<string[]> {
-    const products = await prisma.product.findMany({
-      select: { category: true },
-      distinct: ["category"],
-    });
-    return products.map((p) => p.category).filter(Boolean);
+    try {
+      const products = await prisma.product.findMany({
+        select: { category: true },
+        distinct: ["category"],
+      });
+      return products.map((p) => p.category).filter(Boolean);
+    } catch (e) {
+      console.error("FAILED_TO_GET_DISTINCT_CATEGORIES:", e);
+      return ["Dresses", "Skirts", "Tops"];
+    }
   }
 
   static async getProductsByCategory(category: string, limit: number = 4) {
-    return prisma.product.findMany({
-      where: { category: { equals: category, mode: "insensitive" } },
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    });
+    try {
+      return await prisma.product.findMany({
+        where: { category: { equals: category, mode: "insensitive" } },
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      });
+    } catch (e) {
+      console.error("FAILED_TO_GET_PRODUCTS_BY_CATEGORY:", e);
+      return [];
+    }
   }
 
   static async getNewArrivals(limit: number = 8) {
-    return prisma.product.findMany({
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    });
+    try {
+      return await prisma.product.findMany({
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      });
+    } catch (e) {
+      console.error("FAILED_TO_GET_NEW_ARRIVALS:", e);
+      return [];
+    }
   }
 
   static async getRelatedProducts(category: string, currentProductId: string, limit: number = 4) {
-    return prisma.product.findMany({
-      where: {
-        category: { equals: category, mode: "insensitive" },
-        id: { not: currentProductId },
-      },
-      take: limit,
-    });
+    try {
+      return await prisma.product.findMany({
+        where: {
+          category: { equals: category, mode: "insensitive" },
+          id: { not: currentProductId },
+        },
+        take: limit,
+      });
+    } catch (e) {
+      console.error("FAILED_TO_GET_RELATED_PRODUCTS:", e);
+      return [];
+    }
   }
 
   static async createProduct(data: ProductInput) {

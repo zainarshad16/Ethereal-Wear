@@ -37,23 +37,24 @@ export interface StoreSettingsData {
 
 export class SettingsService {
   static async getSettings(): Promise<StoreSettingsData> {
-    const settings = await prisma.storeSettings.findUnique({
-      where: { id: "global" }
-    });
+    try {
+      const settings = await prisma.storeSettings.findUnique({
+        where: { id: "global" }
+      });
 
-    if (!settings) {
-      return {
-        topBannerText: "FREE SHIPPING ON ALL ORDERS OVER $100",
-        heroHeading: "The Summer Edit",
-        heroSubheading: "Lightweight linens and effortless silhouettes.",
-        heroButtonText: "DISCOVER NOW",
-        heroButtonLink: "/shop",
-        heroImage: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
-        categories: [],
-        highlights: [],
-        reviews: []
-      };
-    }
+      if (!settings) {
+        return {
+          topBannerText: "FREE SHIPPING ON ALL ORDERS OVER RS. 100",
+          heroHeading: "The Summer Edit",
+          heroSubheading: "Lightweight linens and effortless silhouettes.",
+          heroButtonText: "DISCOVER NOW",
+          heroButtonLink: "/shop",
+          heroImage: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+          categories: [],
+          highlights: [],
+          reviews: []
+        };
+      }
 
     let parsedCategories: CategorySetting[] = [];
     let parsedHighlights: HighlightSetting[] = [];
@@ -89,7 +90,21 @@ export class SettingsService {
       highlights: parsedHighlights,
       reviews: parsedReviews
     };
+  } catch (error) {
+    console.error("FAILED_TO_GET_STORE_SETTINGS:", error);
+    return {
+      topBannerText: "FREE SHIPPING ON ALL ORDERS OVER RS. 100",
+      heroHeading: "The Summer Edit",
+      heroSubheading: "Lightweight linens and effortless silhouettes.",
+      heroButtonText: "DISCOVER NOW",
+      heroButtonLink: "/shop",
+      heroImage: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+      categories: [],
+      highlights: [],
+      reviews: []
+    };
   }
+}
 
   static async updateSettings(data: Partial<StoreSettingsData>) {
     const updatePayload: any = {};
