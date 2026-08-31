@@ -9,7 +9,12 @@ import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import CartDrawer from "./CartDrawer";
 
-export default function Header() {
+interface HeaderProps {
+  bannerText?: string;
+  categories?: { title: string; link?: string }[];
+}
+
+export default function Header({ bannerText, categories }: HeaderProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { items, openCart } = useCartStore();
@@ -26,6 +31,16 @@ export default function Header() {
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
   const totalWishlistItems = wishlistItems.length;
 
+  const displayBanner = bannerText || "FREE SHIPPING ON ALL ORDERS OVER Rs. 100";
+  const navCategories = categories && categories.length > 0
+    ? categories
+    : [
+        { title: "SHOP ALL", link: "/shop" },
+        { title: "DRESSES", link: "/shop?category=Dresses" },
+        { title: "SKIRTS", link: "/shop?category=Skirts" },
+        { title: "TOPS", link: "/shop?category=Tops" },
+      ];
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -38,9 +53,11 @@ export default function Header() {
   return (
     <>
       {/* Top Banner */}
-      <div className="bg-black text-white text-xs py-2 text-center tracking-widest font-medium">
-        FREE SHIPPING ON ALL ORDERS OVER Rs. 100
-      </div>
+      {displayBanner && (
+        <div className="bg-black text-white text-xs py-2 text-center tracking-widest font-medium uppercase px-4">
+          {displayBanner}
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-lg border-b border-gray-100 transition-all duration-300">
@@ -61,10 +78,11 @@ export default function Header() {
           
           {/* Desktop Nav */}
           <div className="hidden md:flex flex-1 justify-center items-center space-x-8 text-xs font-semibold tracking-[0.2em] text-gray-600">
-            <Link href="/shop" className="hover:text-black transition-colors">SHOP ALL</Link>
-            <Link href="/shop?category=Dresses" className="hover:text-black transition-colors">DRESSES</Link>
-            <Link href="/shop?category=Skirts" className="hover:text-black transition-colors">SKIRTS</Link>
-            <Link href="/shop?category=Tops" className="hover:text-black transition-colors">TOPS</Link>
+            {navCategories.map((c, i) => (
+              <Link key={i} href={c.link || `/shop?category=${encodeURIComponent(c.title)}`} className="hover:text-black transition-colors uppercase">
+                {c.title}
+              </Link>
+            ))}
           </div>
 
           <div className="flex flex-1 items-center justify-end space-x-6">
@@ -159,10 +177,11 @@ export default function Header() {
         {/* Mobile Menu Dropdown */}
         <div className={`md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "max-h-screen opacity-100 py-6" : "max-h-0 opacity-0 overflow-hidden py-0"}`}>
           <div className="flex flex-col space-y-6 px-6 text-sm font-semibold tracking-[0.2em] text-gray-900">
-            <Link href="/shop" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gray-600 transition-colors">SHOP ALL</Link>
-            <Link href="/shop?category=Dresses" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gray-600 transition-colors">DRESSES</Link>
-            <Link href="/shop?category=Skirts" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gray-600 transition-colors">SKIRTS</Link>
-            <Link href="/shop?category=Tops" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gray-600 transition-colors">TOPS</Link>
+            {navCategories.map((c, i) => (
+              <Link key={i} href={c.link || `/shop?category=${encodeURIComponent(c.title)}`} onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gray-600 transition-colors uppercase">
+                {c.title}
+              </Link>
+            ))}
             <div className="pt-6 border-t border-gray-100 flex items-center space-x-4">
               <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-gray-600">LOG IN</Link>
             </div>

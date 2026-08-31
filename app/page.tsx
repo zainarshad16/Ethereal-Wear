@@ -1,305 +1,316 @@
 import Link from "next/link";
-import { HeartIcon } from "@heroicons/react/24/outline";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import ScrollToTop from "@/components/ScrollToTop";
-import { prisma } from "@/lib/prisma";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HorizontalScroll from "@/components/HorizontalScroll";
 import WishlistButton from "@/components/WishlistButton";
+import { SettingsService } from "@/server/services/settings.service";
+import { ProductService } from "@/server/services/product.service";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [newArrivals, skirtsCollection, topCollection, settings] = await Promise.all([
-    prisma.product.findMany({ take: 4, orderBy: { createdAt: 'desc' } }),
-    prisma.product.findMany({ where: { category: 'Skirts' }, take: 4 }),
-    prisma.product.findMany({ where: { category: 'Tops' }, take: 4 }),
-    prisma.storeSettings.findUnique({ where: { id: "global" } })
-  ]);
+  const settings = await SettingsService.getSettings();
+  const newArrivals = await ProductService.getNewArrivals(8);
 
-  const fallbackNewArrivals: any[] = [
-    { id: "fallback-1", name: "White Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1582142306909-195724d33ab5?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
-    { id: "fallback-2", name: "Black Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
-    { id: "fallback-3", name: "Crop White Button Down", price: 400, imageUrl: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null },
-    { id: "fallback-4", name: "Sleeveless Cotton Inner", price: 250, imageUrl: "https://images.unsplash.com/photo-1503342394128-c104d54dba01?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null }
-  ];
-
-  const fallbackSkirts: any[] = [
-    { id: "fallback-s1", name: "White Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1582142306909-195724d33ab5?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
-    { id: "fallback-s2", name: "Black Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
-    { id: "fallback-s3", name: "Beige Cotton Skirt", price: 1500, imageUrl: "https://images.unsplash.com/photo-1584273143981-41c073dfe8f8?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null },
-    { id: "fallback-s4", name: "Kids Cotton Skirts", price: 750, imageUrl: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Skirts", isOnSale: false, salePercentage: null }
-  ];
-
-  const fallbackTops: any[] = [
-    { id: "fallback-t1", name: "Soft Mocha kurti", price: 750, imageUrl: "https://images.unsplash.com/photo-1618932260643-ee46255a61b8?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null },
-    { id: "fallback-t2", name: "Cottage Graden Kurti", price: 700, imageUrl: "https://images.unsplash.com/photo-1582533555239-514c387063d9?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null },
-    { id: "fallback-t3", name: "Gulbahaar Kurti", price: 700, imageUrl: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null },
-    { id: "fallback-t4", name: "Powder Blue Kurti", price: 700, imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop", hoverImageUrl: null, category: "Tops", isOnSale: false, salePercentage: null }
-  ];
-
-  const displayNewArrivals: any[] = newArrivals.length > 0 ? newArrivals : fallbackNewArrivals;
-  const displaySkirts: any[] = skirtsCollection.length > 0 ? skirtsCollection : fallbackSkirts;
-  const displayTops: any[] = topCollection.length > 0 ? topCollection : fallbackTops;
-
-  const defaultCategories = [
-    { title: "NEW ARRIVAL", link: "/shop?category=New", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop" },
-    { title: "Dresses", link: "/shop?category=Dresses", img: "https://images.unsplash.com/photo-1550639524-a6f58345a278?q=80&w=600&auto=format&fit=crop" },
-    { title: "Tops", link: "/shop?category=Tops", img: "https://images.unsplash.com/photo-1621340156976-59fb8bdf1bdf?q=80&w=600&auto=format&fit=crop" },
-    { title: "Skirts And Bottoms", link: "/shop?category=Skirts", img: "https://images.unsplash.com/photo-1550639524-a6f58345a278?q=80&w=600&auto=format&fit=crop" }
-  ];
-
-  let displayCategories = defaultCategories;
-  if (settings?.categories) {
-    try { 
-      const parsed = JSON.parse(settings.categories); 
-      if (parsed.length > 0) displayCategories = parsed;
-    } catch (e) {}
+  // Dynamic Categories from Settings, or distinct categories from products
+  let categories = settings.categories;
+  if (!categories || categories.length === 0) {
+    const distinctCategories = await ProductService.getDistinctCategories();
+    categories = distinctCategories.map((cat) => ({
+      title: cat,
+      link: `/shop?category=${encodeURIComponent(cat)}`,
+      img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop",
+    }));
   }
 
-  let displayHighlights = [
-    { title: "Colour Spotlight", subtitle: "Save 10—30% Dresses", description: "In-store! Limited time offer.", link: "/shop", img: "https://images.unsplash.com/photo-1550639524-a6f58345a278?q=80&w=800&auto=format&fit=crop" },
-    { title: "Hello! Everyday for Women's", subtitle: "Highlight", description: "Discover a collection of timeless wardrobe essentials, seamlessly transitioning from work to weekend.", link: "/shop", img: "" },
-    { title: "Everyday Luxury", subtitle: "Save 10—30% Dresses", description: "In-store! Limited time offer.", link: "/shop", img: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop" }
-  ];
-  if (settings?.highlights) {
-    try { displayHighlights = JSON.parse(settings.highlights); } catch (e) {}
+  // Fetch category collections dynamically based on categories in store
+  const categoryCollections: { categoryName: string; products: any[] }[] = [];
+  for (const cat of categories.slice(0, 3)) {
+    const prods = await ProductService.getProductsByCategory(cat.title, 6);
+    if (prods.length > 0) {
+      categoryCollections.push({
+        categoryName: cat.title,
+        products: prods,
+      });
+    }
   }
 
-  let displayReviews = [
-    "https://images.unsplash.com/photo-1512413914488-69335ab6932b?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1520333789090-1afc82db536a?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1511556820780-d912e42b4980?q=80&w=600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1534440026707-d3ebf6c4d44f?q=80&w=600&auto=format&fit=crop"
-  ];
-  if (settings?.reviews) {
-    try { 
-      const parsed = JSON.parse(settings.reviews); 
-      if (parsed.length > 0) {
-        displayReviews = parsed.filter((r: string) => r && r.trim() !== "");
-      }
-    } catch (e) {}
-  }
+  const highlights = settings.highlights || [];
+  const reviews = settings.reviews || [];
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-gray-200 relative overflow-x-hidden w-full">
-      <Header />
-
-      {/* Top Banner (Header.tsx handles it right now, let's leave that or pass settings to Header) */}
-      {/* Wait, the Top Banner is currently hardcoded in Header.tsx. Let's fix that later if needed. */}
+      <Header
+        bannerText={settings.topBannerText}
+        categories={categories.map((c) => ({ title: c.title, link: c.link }))}
+      />
 
       {/* Hero Section */}
-      <section className="relative h-[85vh] w-full bg-gray-100 overflow-hidden flex items-center justify-center">
-        <img 
-          src={settings?.heroImage || "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"} 
-          alt="Fashion Model" 
-          className="absolute inset-0 w-full h-full object-cover object-top opacity-90"
-        />
-        <div className="absolute inset-0 bg-black/10" />
-        <div className="relative z-10 text-center text-white px-4">
-          <h1 className="text-5xl md:text-8xl font-serif tracking-tighter drop-shadow-lg mb-6">
-            {settings?.heroHeading || "The Summer Edit"}
-          </h1>
-          <p className="text-lg md:text-xl font-light mb-10 tracking-wide drop-shadow-md">
-            {settings?.heroSubheading || "Lightweight linens and effortless silhouettes."}
-          </p>
-          <Link href={settings?.heroButtonLink || "/shop"} className="inline-block bg-white text-black px-10 py-4 text-sm font-bold tracking-[0.2em] hover:bg-black hover:text-white transition-colors duration-300">
-            {settings?.heroButtonText || "DISCOVER NOW"}
-          </Link>
-        </div>
-      </section>
+      {settings.heroImage && (
+        <section className="relative h-[85vh] w-full bg-gray-100 overflow-hidden flex items-center justify-center">
+          <img
+            src={settings.heroImage}
+            alt="Hero Banner"
+            className="absolute inset-0 w-full h-full object-cover object-top opacity-90"
+          />
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
+            {settings.heroHeading && (
+              <h1 className="text-5xl md:text-8xl font-serif tracking-tighter drop-shadow-lg mb-6">
+                {settings.heroHeading}
+              </h1>
+            )}
+            {settings.heroSubheading && (
+              <p className="text-lg md:text-xl font-light mb-10 tracking-wide drop-shadow-md">
+                {settings.heroSubheading}
+              </p>
+            )}
+            {settings.heroButtonText && (
+              <Link
+                href={settings.heroButtonLink || "/shop"}
+                className="inline-block bg-white text-black px-10 py-4 text-sm font-bold tracking-[0.2em] hover:bg-black hover:text-white transition-colors duration-300 shadow-lg"
+              >
+                {settings.heroButtonText}
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
 
-      {/* Shop By Category */}
-      <section className="py-20 max-w-[1400px] mx-auto px-4">
-        <h2 className="text-center text-3xl font-serif tracking-tighter mb-10">Shop By Category</h2>
-        <HorizontalScroll>
-          {displayCategories.map((cat: any, i: number) => (
-            <Link href={cat.link || "#"} key={i} className="min-w-[300px] md:min-w-[350px] aspect-[4/5] relative snap-center cursor-pointer group/card overflow-hidden block">
-              <img src={cat.img} alt={cat.title} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700" />
-              <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur flex items-center justify-between p-4 shadow-sm group-hover/card:bg-white transition-colors">
-                <span className="font-semibold text-sm tracking-wide">{cat.title}</span>
-                <span className="text-xl">&rarr;</span>
-              </div>
-            </Link>
-          ))}
-        </HorizontalScroll>
-      </section>
-
-      {/* New Arrival Grid */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-center text-3xl font-serif tracking-tighter mb-10">New Arrival</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {displayNewArrivals.map((item, i) => (
-            <Link href={`/product/${item.id || 'demo'}`} key={i} className="group relative block">
-              <div className="relative aspect-[3/4] overflow-hidden bg-gray-50 mb-3 w-full">
-                <img src={item.imageUrl} alt={item.name} className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ${item.hoverImageUrl ? "group-hover:opacity-0" : "group-hover:scale-105"}`} />
-                {item.hoverImageUrl && (
-                  <img src={item.hoverImageUrl} alt={`${item.name} Alternate`} className="object-cover w-full h-full absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
-                )}
-                {item.isOnSale && (
-                  <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold tracking-widest px-2 py-1 uppercase z-20">
-                    SALE
+      {/* Shop By Category Section */}
+      {categories.length > 0 && (
+        <section className="py-20 max-w-[1400px] mx-auto px-4">
+          <h2 className="text-center text-3xl font-serif tracking-tighter mb-10">Shop By Category</h2>
+          <HorizontalScroll>
+            {categories.map((cat, i) => (
+              <Link
+                href={cat.link || `/shop?category=${encodeURIComponent(cat.title)}`}
+                key={i}
+                className="min-w-[300px] md:min-w-[350px] aspect-[4/5] relative snap-center cursor-pointer group/card overflow-hidden block rounded-none shadow-sm"
+              >
+                {cat.img ? (
+                  <img
+                    src={cat.img}
+                    alt={cat.title}
+                    className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-stone-100 flex items-center justify-center text-stone-400 font-medium">
+                    {cat.title}
                   </div>
                 )}
-                <WishlistButton item={{
-                  id: item.id,
-                  name: item.name,
-                  price: item.price,
-                  imageUrl: item.imageUrl,
-                  hoverImageUrl: item.hoverImageUrl,
-                  category: item.category,
-                  isOnSale: item.isOnSale,
-                  salePercentage: item.salePercentage
-                }} />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 group-hover:underline">{item.name}</h3>
-                <div className="mt-1 flex items-center space-x-2">
-                  {item.isOnSale ? (
-                    <>
-                      <span className="text-sm text-red-600 font-medium">Rs.{(item.price * (1 - item.salePercentage / 100)).toFixed(2)}</span>
-                      <span className="text-xs text-gray-400 line-through">Rs.{item.price.toFixed(2)}</span>
-                    </>
-                  ) : (
-                    <span className="text-sm text-gray-600">Rs.{item.price.toFixed(2)}</span>
-                  )}
+                <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur flex items-center justify-between p-4 shadow-sm group-hover/card:bg-white transition-colors">
+                  <span className="font-semibold text-sm tracking-wide uppercase">{cat.title}</span>
+                  <span className="text-xl">&rarr;</span>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+              </Link>
+            ))}
+          </HorizontalScroll>
+        </section>
+      )}
 
-      {/* Skirts Collection */}
-      <section className="py-20 max-w-[1400px] mx-auto px-4">
-        <div className="flex justify-between items-end mb-10">
-          <h2 className="text-3xl font-serif tracking-tighter">Skirts Collection</h2>
-          <Link href="/shop?category=Skirts" className="text-sm font-semibold tracking-widest uppercase hover:underline border-b border-black pb-1">View All</Link>
-        </div>
-        <HorizontalScroll>
-          {displaySkirts.map((item, i) => (
-            <Link href={`/product/${item.id || 'demo'}`} key={i} className="min-w-[280px] md:min-w-[320px] relative snap-center group/item block">
-              <div className="relative aspect-[3/4] overflow-hidden bg-gray-50 mb-3 w-full">
-                <img src={item.imageUrl} alt={item.name} className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ${item.hoverImageUrl ? "group-hover/item:opacity-0" : "group-hover/item:scale-105"}`} />
-                {item.hoverImageUrl && (
-                  <img src={item.hoverImageUrl} alt={`${item.name} Alternate`} className="object-cover w-full h-full absolute inset-0 opacity-0 group-hover/item:opacity-100 group-hover/item:scale-105 transition-all duration-700" />
-                )}
-                {item.isOnSale && (
-                  <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold tracking-widest px-2 py-1 uppercase z-20">
-                    SALE
+      {/* New Arrivals Section */}
+      {newArrivals.length > 0 && (
+        <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-end mb-10">
+            <h2 className="text-3xl font-serif tracking-tighter">New Arrivals</h2>
+            <Link
+              href="/shop"
+              className="text-sm font-semibold tracking-widest uppercase hover:underline border-b border-black pb-1"
+            >
+              View All
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {newArrivals.map((item) => (
+              <Link href={`/product/${item.id}`} key={item.id} className="group relative block">
+                <div className="relative aspect-[3/4] overflow-hidden bg-gray-50 mb-3 w-full">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ${
+                      item.hoverImageUrl ? "group-hover:opacity-0" : "group-hover:scale-105"
+                    }`}
+                  />
+                  {item.hoverImageUrl && (
+                    <img
+                      src={item.hoverImageUrl}
+                      alt={`${item.name} Alternate`}
+                      className="object-cover w-full h-full absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                    />
+                  )}
+                  {item.isOnSale && (
+                    <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold tracking-widest px-2 py-1 uppercase z-20">
+                      SALE
+                    </div>
+                  )}
+                  <WishlistButton
+                    item={{
+                      id: item.id,
+                      name: item.name,
+                      price: item.price,
+                      imageUrl: item.imageUrl,
+                      hoverImageUrl: item.hoverImageUrl,
+                      category: item.category,
+                      isOnSale: item.isOnSale,
+                      salePercentage: item.salePercentage,
+                    }}
+                  />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 group-hover:underline">{item.name}</h3>
+                  <div className="mt-1 flex items-center space-x-2">
+                    {item.isOnSale && item.salePercentage ? (
+                      <>
+                        <span className="text-sm text-red-600 font-medium">
+                          Rs.{(item.price * (1 - item.salePercentage / 100)).toFixed(2)}
+                        </span>
+                        <span className="text-xs text-gray-400 line-through">Rs.{item.price.toFixed(2)}</span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-gray-600">Rs.{item.price.toFixed(2)}</span>
+                    )}
                   </div>
-                )}
-                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/item:opacity-100 transition-opacity z-10" />
-                <WishlistButton item={{
-                  id: item.id,
-                  name: item.name,
-                  price: item.price,
-                  imageUrl: item.imageUrl,
-                  hoverImageUrl: item.hoverImageUrl,
-                  category: item.category,
-                  isOnSale: item.isOnSale,
-                  salePercentage: item.salePercentage
-                }} />
-                <button className="absolute bottom-4 left-4 right-4 bg-white/90 py-2.5 text-xs font-semibold tracking-wider text-center opacity-0 translate-y-4 group-hover/item:opacity-100 group-hover/item:translate-y-0 transition-all duration-300 z-20">
-                  View Product
-                </button>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 group-hover/item:underline">{item.name}</h3>
-                <div className="mt-1 flex items-center space-x-2">
-                  {item.isOnSale ? (
-                    <>
-                      <span className="text-sm text-red-600 font-medium">Rs.{(item.price * (1 - item.salePercentage / 100)).toFixed(2)}</span>
-                      <span className="text-xs text-gray-400 line-through">Rs.{item.price.toFixed(2)}</span>
-                    </>
-                  ) : (
-                    <span className="text-sm text-gray-600">Rs.{item.price.toFixed(2)}</span>
-                  )}
                 </div>
-              </div>
-            </Link>
-          ))}
-        </HorizontalScroll>
-      </section>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* Top Collection */}
-      <section className="py-20 max-w-[1400px] mx-auto px-4">
-        <div className="flex justify-between items-end mb-10">
-          <h2 className="text-3xl font-serif tracking-tighter">Top Collection</h2>
-          <Link href="/shop?category=Tops" className="text-sm font-semibold tracking-widest uppercase hover:underline border-b border-black pb-1">View All</Link>
-        </div>
-        <HorizontalScroll>
-          {displayTops.map((item, i) => (
-            <Link href={`/product/${item.id || 'demo'}`} key={i} className="min-w-[280px] md:min-w-[320px] relative snap-center group/item block">
-              <div className="relative aspect-[3/4] overflow-hidden bg-white mb-3">
-                <img src={item.imageUrl} alt={item.name} className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ${item.hoverImageUrl ? "group-hover/item:opacity-0" : "group-hover/item:scale-105"}`} />
-                {item.hoverImageUrl && (
-                  <img src={item.hoverImageUrl} alt={`${item.name} Alternate`} className="object-cover w-full h-full absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
-                )}
-                {item.isOnSale && (
-                  <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold tracking-widest px-2 py-1 uppercase z-20">
-                    SALE
+      {/* Dynamic Category Collections */}
+      {categoryCollections.map((collection, idx) => (
+        <section key={idx} className="py-20 max-w-[1400px] mx-auto px-4">
+          <div className="flex justify-between items-end mb-10">
+            <h2 className="text-3xl font-serif tracking-tighter">{collection.categoryName} Collection</h2>
+            <Link
+              href={`/shop?category=${encodeURIComponent(collection.categoryName)}`}
+              className="text-sm font-semibold tracking-widest uppercase hover:underline border-b border-black pb-1"
+            >
+              View All
+            </Link>
+          </div>
+          <HorizontalScroll>
+            {collection.products.map((item) => (
+              <Link
+                href={`/product/${item.id}`}
+                key={item.id}
+                className="min-w-[280px] md:min-w-[320px] relative snap-center group/item block"
+              >
+                <div className="relative aspect-[3/4] overflow-hidden bg-gray-50 mb-3 w-full">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ${
+                      item.hoverImageUrl ? "group-hover/item:opacity-0" : "group-hover/item:scale-105"
+                    }`}
+                  />
+                  {item.hoverImageUrl && (
+                    <img
+                      src={item.hoverImageUrl}
+                      alt={`${item.name} Alternate`}
+                      className="object-cover w-full h-full absolute inset-0 opacity-0 group-hover/item:opacity-100 group-hover/item:scale-105 transition-all duration-700"
+                    />
+                  )}
+                  {item.isOnSale && (
+                    <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold tracking-widest px-2 py-1 uppercase z-20">
+                      SALE
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/item:opacity-100 transition-opacity z-10" />
+                  <WishlistButton
+                    item={{
+                      id: item.id,
+                      name: item.name,
+                      price: item.price,
+                      imageUrl: item.imageUrl,
+                      hoverImageUrl: item.hoverImageUrl,
+                      category: item.category,
+                      isOnSale: item.isOnSale,
+                      salePercentage: item.salePercentage,
+                    }}
+                  />
+                  <button className="absolute bottom-4 left-4 right-4 bg-white/90 py-2.5 text-xs font-semibold tracking-wider text-center opacity-0 translate-y-4 group-hover/item:opacity-100 group-hover/item:translate-y-0 transition-all duration-300 z-20">
+                    View Product
+                  </button>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 group-hover/item:underline">{item.name}</h3>
+                  <div className="mt-1 flex items-center space-x-2">
+                    {item.isOnSale && item.salePercentage ? (
+                      <>
+                        <span className="text-sm text-red-600 font-medium">
+                          Rs.{(item.price * (1 - item.salePercentage / 100)).toFixed(2)}
+                        </span>
+                        <span className="text-xs text-gray-400 line-through">Rs.{item.price.toFixed(2)}</span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-gray-600">Rs.{item.price.toFixed(2)}</span>
+                    )}
                   </div>
-                )}
-                <WishlistButton item={{
-                  id: item.id,
-                  name: item.name,
-                  price: item.price,
-                  imageUrl: item.imageUrl,
-                  hoverImageUrl: item.hoverImageUrl,
-                  category: item.category,
-                  isOnSale: item.isOnSale,
-                  salePercentage: item.salePercentage
-                }} />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 group-hover:underline">{item.name}</h3>
-                <div className="mt-1 flex items-center space-x-2">
-                  {item.isOnSale ? (
-                    <>
-                      <span className="text-sm text-red-600 font-medium">Rs.{(item.price * (1 - item.salePercentage / 100)).toFixed(2)}</span>
-                      <span className="text-xs text-gray-400 line-through">Rs.{item.price.toFixed(2)}</span>
-                    </>
-                  ) : (
-                    <span className="text-sm text-gray-600">Rs.{item.price.toFixed(2)}</span>
-                  )}
                 </div>
-              </div>
-            </Link>
-          ))}
-        </HorizontalScroll>
-      </section>
+              </Link>
+            ))}
+          </HorizontalScroll>
+        </section>
+      ))}
 
-      {/* Highlight Banner Section */}
-      {displayHighlights.length > 0 && (
-        <section className={`grid grid-cols-1 md:grid-cols-${Math.min(3, displayHighlights.length)} h-auto md:h-[70vh] min-h-[500px]`}>
-          {displayHighlights.map((hl: any, i: number) => {
-            // Render text-only block if it's the second item (index 1) and has no image, or anytime there's no image
+      {/* Dynamic Highlights Section */}
+      {highlights.length > 0 && (
+        <section className="grid grid-cols-1 md:grid-cols-3 h-auto md:h-[70vh] min-h-[500px]">
+          {highlights.map((hl, i) => {
             if (!hl.img) {
               return (
-                <div key={i} className="flex flex-col items-center justify-center text-center p-12 text-gray-900 min-h-[40vh] md:min-h-0" style={{ backgroundColor: hl.bgColor || '#BADDF2' }}>
-                  <span className="text-[10px] font-bold tracking-widest uppercase mb-4 text-gray-600">{hl.subtitle}</span>
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center text-center p-12 text-gray-900 min-h-[40vh] md:min-h-0"
+                  style={{ backgroundColor: hl.bgColor || "#BADDF2" }}
+                >
+                  {hl.subtitle && (
+                    <span className="text-[10px] font-bold tracking-widest uppercase mb-4 text-gray-600">
+                      {hl.subtitle}
+                    </span>
+                  )}
                   <h2 className="text-4xl md:text-5xl font-serif tracking-tighter mb-6">{hl.title}</h2>
-                  <div className="text-sm text-gray-700 w-full max-w-md px-4 mx-auto mb-8 leading-relaxed prose prose-sm whitespace-normal break-words [&>p]:whitespace-normal [&>p]:break-words" dangerouslySetInnerHTML={{ __html: hl.description || "" }} />
-                  <Link href={hl.link || "/shop"} className="bg-black text-white px-8 py-3 text-sm font-semibold rounded-full hover:bg-gray-800 transition-colors">
-                    View More
-                  </Link>
+                  {hl.description && (
+                    <div
+                      className="text-sm text-gray-700 w-full max-w-md px-4 mx-auto mb-8 leading-relaxed prose prose-sm whitespace-normal break-words [&>p]:whitespace-normal [&>p]:break-words"
+                      dangerouslySetInnerHTML={{ __html: hl.description }}
+                    />
+                  )}
+                  {hl.link && (
+                    <Link
+                      href={hl.link}
+                      className="bg-black text-white px-8 py-3 text-sm font-semibold rounded-full hover:bg-gray-800 transition-colors"
+                    >
+                      View More
+                    </Link>
+                  )}
                 </div>
               );
             }
 
-            // Image block
             return (
               <div key={i} className="relative group overflow-hidden bg-gray-100 min-h-[40vh] md:min-h-0">
-                <img src={hl.img} alt={hl.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
-                <div className="absolute inset-0 bg-black/20" />
+                <img
+                  src={hl.img}
+                  alt={hl.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                />
+                <div className="absolute inset-0 bg-black/25" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center p-6">
-                  <span className="text-[10px] font-bold tracking-widest uppercase mb-2">{hl.subtitle}</span>
-                  <h3 className="text-4xl font-serif mb-2">{hl.title}</h3>
-                  <div className="text-xs prose prose-sm prose-invert" dangerouslySetInnerHTML={{ __html: hl.description || "" }} />
-                  {i === 2 && (
-                    <div className="absolute bottom-12 font-serif text-3xl opacity-80 italic">Summer fit</div>
+                  {hl.subtitle && (
+                    <span className="text-[10px] font-bold tracking-widest uppercase mb-2 drop-shadow">
+                      {hl.subtitle}
+                    </span>
+                  )}
+                  <h3 className="text-4xl font-serif mb-2 drop-shadow-md">{hl.title}</h3>
+                  {hl.description && (
+                    <div
+                      className="text-xs prose prose-sm prose-invert drop-shadow"
+                      dangerouslySetInnerHTML={{ __html: hl.description }}
+                    />
                   )}
                 </div>
               </div>
@@ -308,21 +319,43 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Customer Reviews */}
-      <section className="py-24 max-w-[1400px] mx-auto px-4 bg-white">
-        <h2 className="text-center text-3xl font-serif tracking-tighter mb-12">Customer Reviews</h2>
-        <HorizontalScroll>
-          {displayReviews.map((img: string, i: number) => (
-            <div key={i} className="min-w-[260px] md:min-w-[300px] aspect-[4/5] relative snap-center rounded-xl overflow-hidden shadow-sm border border-gray-100 flex-shrink-0 bg-gray-50 group">
-              <img src={img} alt={`Customer Review ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-            </div>
-          ))}
-        </HorizontalScroll>
-      </section>
+      {/* Dynamic Customer Reviews */}
+      {reviews.length > 0 && (
+        <section className="py-24 max-w-[1400px] mx-auto px-4 bg-white">
+          <h2 className="text-center text-3xl font-serif tracking-tighter mb-12">Customer Reviews</h2>
+          <HorizontalScroll>
+            {reviews.map((rev, i) => (
+              <div
+                key={i}
+                className="min-w-[260px] md:min-w-[300px] aspect-[4/5] relative snap-center rounded-xl overflow-hidden shadow-sm border border-gray-100 flex-shrink-0 bg-gray-50 group"
+              >
+                {rev.image ? (
+                  <img
+                    src={rev.image}
+                    alt={rev.name || `Review ${i + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                ) : (
+                  <div className="w-full h-full p-8 flex flex-col justify-between bg-stone-50 text-stone-900">
+                    <div className="flex text-amber-400 text-sm">
+                      {"★".repeat(rev.rating || 5)}
+                    </div>
+                    <p className="text-sm italic font-serif leading-relaxed text-stone-700">
+                      "{rev.comment}"
+                    </p>
+                    <div>
+                      <p className="font-semibold text-xs tracking-wider uppercase">{rev.name}</p>
+                      {rev.location && <p className="text-[10px] text-stone-400">{rev.location}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </HorizontalScroll>
+        </section>
+      )}
 
       <Footer />
-
-      {/* Back to Top Button Component */}
       <ScrollToTop />
     </div>
   );

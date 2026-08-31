@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { ProductService } from "@/server/services/product.service";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
@@ -18,30 +18,16 @@ export default async function ShopPage({
   const sale = params.sale === "true";
   const query = typeof params.q === "string" ? params.q : undefined;
 
-  // Build prisma where clause
-  let where: any = {};
-  if (category && category !== "New" && category !== "Bestsellers") {
-    where.category = category;
-  }
-  if (sale) {
-    where.isOnSale = true;
-  }
-  if (query) {
-    where.OR = [
-      { name: { contains: query, mode: "insensitive" } },
-      { category: { contains: query, mode: "insensitive" } },
-      { description: { contains: query, mode: "insensitive" } }
-    ];
-  }
-  
-  let orderBy: any = { createdAt: "desc" };
-  
-  const products = await prisma.product.findMany({
-    where,
-    orderBy,
-  });
+  const [products, distinctCategories] = await Promise.all([
+    ProductService.getAllProducts({
+      category,
+      isOnSale: sale ? true : undefined,
+      search: query,
+    }),
+    ProductService.getDistinctCategories(),
+  ]);
 
-  const categories = ["All", "Dresses", "Skirts", "Tops", "Outerwear"];
+  const categories = ["All", ...Array.from(new Set(distinctCategories))];
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-gray-200">

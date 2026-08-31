@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { ProductService } from "@/server/services/product.service";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
@@ -16,38 +16,7 @@ export default async function ProductPage({
 }) {
   const { id } = await params;
 
-  let product = await prisma.product.findUnique({
-    where: { id },
-  });
-
-  if (!product) {
-    if (id === 'demo') {
-      product = {
-        id: 'demo',
-        name: "Mock Product (Demo)",
-        description: "This is a placeholder product because the database product was not found. Enjoy the luxurious design.",
-        price: 250.00,
-        imageUrl: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?q=80&w=600&auto=format&fit=crop",
-        hoverImageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop",
-        images: [
-          "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?q=80&w=600&auto=format&fit=crop",
-          "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop"
-        ],
-        category: "Tops",
-        stock: 10,
-        sizeStock: { XS: 2, S: 3, M: 2, L: 2, XL: 1 },
-        sku: "MOCK-123",
-        isFeatured: false,
-        isOnSale: false,
-        salePercentage: null,
-        orderIndex: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any;
-    } else {
-      notFound();
-    }
-  }
+  const product = await ProductService.getProductById(id);
 
   if (!product) {
     notFound();
@@ -55,13 +24,11 @@ export default async function ProductPage({
 
   const currentProduct = product;
 
-  const relatedProducts = await prisma.product.findMany({
-    where: { 
-      category: currentProduct.category,
-      id: { not: currentProduct.id }
-    },
-    take: 4
-  });
+  const relatedProducts = await ProductService.getRelatedProducts(
+    currentProduct.category,
+    currentProduct.id,
+    4
+  );
 
   const imagesToPass = currentProduct.images && Array.isArray(currentProduct.images) && currentProduct.images.length > 0 
     ? currentProduct.images 
