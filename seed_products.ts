@@ -199,7 +199,21 @@ async function main() {
     }
   });
 
-  console.log("Successfully seeded 8 products and dynamic StoreSettings into PostgreSQL!");
+  // 3. Seed Admin Users
+  const bcrypt = await import("bcryptjs");
+  const adminPasswordHash = await bcrypt.default.hash("admin123", 10);
+  await prisma.user.upsert({
+    where: { email: "admin@ethereal.com" },
+    update: { password: adminPasswordHash, role: "ADMIN" },
+    create: { email: "admin@ethereal.com", name: "Admin User", password: adminPasswordHash, role: "ADMIN" }
+  });
+  await prisma.user.upsert({
+    where: { email: "zainarshad110@gmail.com" },
+    update: { password: adminPasswordHash, role: "ADMIN" },
+    create: { email: "zainarshad110@gmail.com", name: "Zain Arshad", password: adminPasswordHash, role: "ADMIN" }
+  });
+
+  console.log("Successfully seeded 8 products, dynamic StoreSettings, and Admin accounts into PostgreSQL!");
 }
 
 main()
