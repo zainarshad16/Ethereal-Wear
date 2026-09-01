@@ -6,12 +6,109 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    // 0. Auto-create all tables if they don't exist yet in the database
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "User" (
+        "id" TEXT PRIMARY KEY,
+        "name" TEXT,
+        "email" TEXT UNIQUE,
+        "emailVerified" TIMESTAMP(3),
+        "image" TEXT,
+        "password" TEXT,
+        "resetToken" TEXT,
+        "resetTokenExpiry" TIMESTAMP(3),
+        "role" TEXT NOT NULL DEFAULT 'USER'
+      );
+
+      CREATE TABLE IF NOT EXISTS "Account" (
+        "id" TEXT PRIMARY KEY,
+        "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
+        "type" TEXT NOT NULL,
+        "provider" TEXT NOT NULL,
+        "providerAccountId" TEXT NOT NULL,
+        "refresh_token" TEXT,
+        "access_token" TEXT,
+        "expires_at" INTEGER,
+        "token_type" TEXT,
+        "scope" TEXT,
+        "id_token" TEXT,
+        "session_state" TEXT,
+        CONSTRAINT "Account_provider_providerAccountId_key" UNIQUE("provider", "providerAccountId")
+      );
+
+      CREATE TABLE IF NOT EXISTS "Session" (
+        "id" TEXT PRIMARY KEY,
+        "sessionToken" TEXT NOT NULL UNIQUE,
+        "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
+        "expires" TIMESTAMP(3) NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS "VerificationToken" (
+        "identifier" TEXT NOT NULL,
+        "token" TEXT NOT NULL UNIQUE,
+        "expires" TIMESTAMP(3) NOT NULL,
+        CONSTRAINT "VerificationToken_identifier_token_key" UNIQUE ("identifier", "token")
+      );
+
+      CREATE TABLE IF NOT EXISTS "Product" (
+        "id" TEXT PRIMARY KEY,
+        "name" TEXT NOT NULL,
+        "description" TEXT NOT NULL,
+        "price" DOUBLE PRECISION NOT NULL,
+        "imageUrl" TEXT NOT NULL,
+        "hoverImageUrl" TEXT,
+        "category" TEXT NOT NULL,
+        "stock" INTEGER NOT NULL DEFAULT 0,
+        "sizeStock" JSONB,
+        "images" TEXT[] DEFAULT ARRAY[]::TEXT[],
+        "sku" TEXT,
+        "isFeatured" BOOLEAN NOT NULL DEFAULT false,
+        "isOnSale" BOOLEAN NOT NULL DEFAULT false,
+        "salePercentage" INTEGER,
+        "orderIndex" INTEGER NOT NULL DEFAULT 0,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "Order" (
+        "id" TEXT PRIMARY KEY,
+        "userId" TEXT NOT NULL REFERENCES "User"("id"),
+        "status" TEXT NOT NULL DEFAULT 'PENDING',
+        "total" DOUBLE PRECISION NOT NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "OrderItem" (
+        "id" TEXT PRIMARY KEY,
+        "orderId" TEXT NOT NULL REFERENCES "Order"("id") ON DELETE CASCADE,
+        "productId" TEXT NOT NULL REFERENCES "Product"("id"),
+        "quantity" INTEGER NOT NULL,
+        "price" DOUBLE PRECISION NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS "StoreSettings" (
+        "id" TEXT PRIMARY KEY DEFAULT 'global',
+        "topBannerText" TEXT NOT NULL DEFAULT 'FREE SHIPPING ON ALL ORDERS OVER $100',
+        "heroHeading" TEXT NOT NULL DEFAULT 'The Summer Edit',
+        "heroSubheading" TEXT NOT NULL DEFAULT 'Lightweight linens and effortless silhouettes.',
+        "heroButtonText" TEXT NOT NULL DEFAULT 'DISCOVER NOW',
+        "heroButtonLink" TEXT NOT NULL DEFAULT '/shop',
+        "heroImage" TEXT NOT NULL DEFAULT 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop',
+        "categories" TEXT,
+        "highlights" TEXT,
+        "reviews" TEXT,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // 1. Seed Admin Users
     const adminPasswordHash = await bcrypt.hash("admin123", 10);
     const admin1 = await prisma.user.upsert({
       where: { email: "admin@ethereal.com" },
       update: { password: adminPasswordHash, role: "ADMIN" },
       create: {
+        id: "admin-default-1",
         email: "admin@ethereal.com",
         name: "Admin User",
         password: adminPasswordHash,
@@ -23,6 +120,7 @@ export async function GET() {
       where: { email: "zainarshad110@gmail.com" },
       update: { password: adminPasswordHash, role: "ADMIN" },
       create: {
+        id: "admin-zain-2",
         email: "zainarshad110@gmail.com",
         name: "Zain Arshad",
         password: adminPasswordHash,
@@ -101,6 +199,7 @@ export async function GET() {
     if (productCount === 0) {
       const mockProducts = [
         {
+          id: "prod-1",
           name: "Floral Summer Dress",
           description: "<p>A beautiful floral dress perfect for summer days.</p>",
           price: 2500,
@@ -115,6 +214,7 @@ export async function GET() {
           orderIndex: 0
         },
         {
+          id: "prod-2",
           name: "Elegant Evening Gown",
           description: "<p>Stunning evening gown with intricate detailing.</p>",
           price: 8500,
@@ -129,6 +229,7 @@ export async function GET() {
           orderIndex: 1
         },
         {
+          id: "prod-3",
           name: "Pleated Midi Skirt",
           description: "<p>Versatile pleated skirt that can be dressed up or down.</p>",
           price: 1800,
@@ -143,6 +244,7 @@ export async function GET() {
           orderIndex: 2
         },
         {
+          id: "prod-4",
           name: "Denim Mini Skirt",
           description: "<p>Classic denim mini skirt with a modern cut.</p>",
           price: 1200,
@@ -157,6 +259,7 @@ export async function GET() {
           orderIndex: 3
         },
         {
+          id: "prod-5",
           name: "Silk Blouse",
           description: "<p>Luxurious silk blouse with a draped neckline.</p>",
           price: 3200,
@@ -171,6 +274,7 @@ export async function GET() {
           orderIndex: 4
         },
         {
+          id: "prod-6",
           name: "Casual Ribbed Tank",
           description: "<p>Essential ribbed tank top in organic cotton.</p>",
           price: 600,
@@ -185,6 +289,7 @@ export async function GET() {
           orderIndex: 5
         },
         {
+          id: "prod-7",
           name: "Linen Crop Top",
           description: "<p>Breezy linen crop top.</p>",
           price: 1500,
@@ -199,6 +304,7 @@ export async function GET() {
           orderIndex: 6
         },
         {
+          id: "prod-8",
           name: "Boho Maxi Skirt",
           description: "<p>Flowy bohemian maxi skirt with print.</p>",
           price: 2200,
@@ -221,7 +327,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: "Seeded Admin users (admin@ethereal.com, zainarshad110@gmail.com with password 'admin123'), dynamic StoreSettings, and Products.",
+      message: "Database tables created & seeded successfully with Admin users (admin@ethereal.com, zainarshad110@gmail.com / admin123), dynamic StoreSettings, and Products!",
       admins: [admin1.email, admin2.email],
     });
   } catch (error: any) {
