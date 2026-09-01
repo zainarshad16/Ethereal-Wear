@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import * as AuthorizeNet from "authorizenet";
+import { EmailService } from "@/server/services/email.service";
 
 // Promise wrapper for Authorize.net SDK
 function processAuthorizeNetPayment(paymentData: any): Promise<any> {
@@ -199,8 +200,43 @@ export async function POST(req: Request) {
         items: {
           create: orderItemsData
         }
+      },
+      include: {
+        items: {
+          include: {
+            product: true
+          }
+        }
       }
     });
+
+    // 4. Send Email to Customer & Admin
+    const emailItems = order.items.map((it) => {
+      const origItem = items.find((i: any) => i.productId === it.productId);
+      return {
+        name: it.product.name,
+        quantity: it.quantity,
+        price: it.price,
+        size: origItem?.size || "S",
+        imageUrl: it.product.imageUrl
+      };
+    });
+
+    // Fire and forget email dispatch (non-blocking for fast response)
+    EmailService.sendOrderPlacedEmails({
+      orderId: order.id,
+      total,
+      items: emailItems,
+      shippingDetails: {
+        firstName: shippingDetails.firstName || "Customer",
+        lastName: shippingDetails.lastName || "",
+        email: shippingDetails.email || (session?.user as any)?.email || "",
+        address: shippingDetails.address || "",
+        city: shippingDetails.city || "",
+        country: shippingDetails.country || "",
+        zipCode: shippingDetails.zipCode || ""
+      }
+    }).catch((err) => console.error("ASYNC_ORDER_EMAIL_ERROR:", err));
 
     return NextResponse.json({ success: true, orderId: order.id, transactionId: paymentResult.transactionId });
   } catch (error: any) {

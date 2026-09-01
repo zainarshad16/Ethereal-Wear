@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { EmailService } from "@/server/services/email.service";
 
 export async function PATCH(
   req: Request,
@@ -24,8 +25,31 @@ export async function PATCH(
 
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
-      data: { status }
+      data: { status },
+      include: {
+        user: true,
+        items: {
+          include: {
+            product: true
+          }
+        }
+      }
     });
+
+    // Send Status Update Email to Customer
+    if (updatedOrder.user?.email) {
+      EmailService.sendOrderStatusUpdateEmail({
+        orderId: updatedOrder.id,
+        newStatus: status,
+        customerEmail: updatedOrder.user.email,
+        customerName: updatedOrder.user.name || "Customer",
+        total: updatedOrder.total,
+        items: updatedOrder.items.map((it) => ({
+          name: it.product.name,
+          quantity: it.quantity
+        }))
+      }).catch((err) => console.error("ASYNC_STATUS_EMAIL_ERROR:", err));
+    }
 
     return NextResponse.json({ success: true, order: updatedOrder });
   } catch (error: any) {
