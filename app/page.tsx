@@ -324,33 +324,45 @@ export default async function Home() {
         <section className="py-24 max-w-[1400px] mx-auto px-4 bg-white">
           <h2 className="text-center text-3xl font-serif tracking-tighter mb-12">Customer Reviews</h2>
           <HorizontalScroll>
-            {reviews.map((rev, i) => (
-              <div
-                key={i}
-                className="min-w-[260px] md:min-w-[300px] aspect-[4/5] relative snap-center rounded-xl overflow-hidden shadow-sm border border-gray-100 flex-shrink-0 bg-gray-50 group"
-              >
-                {rev.image ? (
-                  <img
-                    src={rev.image}
-                    alt={rev.name || `Review ${i + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                ) : (
-                  <div className="w-full h-full p-8 flex flex-col justify-between bg-stone-50 text-stone-900">
-                    <div className="flex text-amber-400 text-sm">
-                      {"★".repeat(rev.rating || 5)}
+            {reviews.map((rev, i) => {
+              const imageSrc =
+                rev.image ||
+                (rev.comment &&
+                (rev.comment.startsWith("data:image") ||
+                  rev.comment.startsWith("http://") ||
+                  rev.comment.startsWith("https://") ||
+                  rev.comment.startsWith("/"))
+                  ? rev.comment
+                  : null);
+
+              return (
+                <div
+                  key={i}
+                  className="min-w-[260px] md:min-w-[300px] aspect-[4/5] relative snap-center rounded-xl overflow-hidden shadow-sm border border-gray-100 flex-shrink-0 bg-gray-50 group"
+                >
+                  {imageSrc ? (
+                    <img
+                      src={imageSrc}
+                      alt={rev.name || `Customer Review ${i + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="w-full h-full p-8 flex flex-col justify-between bg-stone-50 text-stone-900">
+                      <div className="flex text-amber-400 text-sm">
+                        {"★".repeat(rev.rating || 5)}
+                      </div>
+                      <p className="text-sm italic font-serif leading-relaxed text-stone-700 line-clamp-6">
+                        "{rev.comment}"
+                      </p>
+                      <div>
+                        <p className="font-semibold text-xs tracking-wider uppercase">{rev.name}</p>
+                        {rev.location && <p className="text-[10px] text-stone-400">{rev.location}</p>}
+                      </div>
                     </div>
-                    <p className="text-sm italic font-serif leading-relaxed text-stone-700">
-                      "{rev.comment}"
-                    </p>
-                    <div>
-                      <p className="font-semibold text-xs tracking-wider uppercase">{rev.name}</p>
-                      {rev.location && <p className="text-[10px] text-stone-400">{rev.location}</p>}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
           </HorizontalScroll>
         </section>
       )}

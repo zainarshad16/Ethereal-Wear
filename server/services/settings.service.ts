@@ -69,10 +69,20 @@ export class SettingsService {
     if (settings.reviews) {
       try { 
         const raw = JSON.parse(settings.reviews);
-        // Support either string array or structured ReviewSetting array
+        // Support either string array (image URLs/base64) or structured ReviewSetting array
         parsedReviews = raw.map((r: any) => {
           if (typeof r === "string") {
+            const isImg = r.startsWith("data:image") || r.startsWith("http://") || r.startsWith("https://") || r.startsWith("/");
+            if (isImg) {
+              return { name: "Customer Review", image: r, rating: 5 };
+            }
             return { name: "Verified Customer", comment: r, rating: 5 };
+          }
+          if (r && typeof r === "object") {
+            if (!r.image && r.comment && (r.comment.startsWith("data:image") || r.comment.startsWith("http://") || r.comment.startsWith("https://") || r.comment.startsWith("/"))) {
+              return { ...r, image: r.comment, comment: undefined };
+            }
+            return r;
           }
           return r;
         });
