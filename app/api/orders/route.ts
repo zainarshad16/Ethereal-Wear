@@ -222,21 +222,25 @@ export async function POST(req: Request) {
       };
     });
 
-    // Fire and forget email dispatch (non-blocking for fast response)
-    EmailService.sendOrderPlacedEmails({
-      orderId: order.id,
-      total,
-      items: emailItems,
-      shippingDetails: {
-        firstName: shippingDetails.firstName || "Customer",
-        lastName: shippingDetails.lastName || "",
-        email: shippingDetails.email || (session?.user as any)?.email || "",
-        address: shippingDetails.address || "",
-        city: shippingDetails.city || "",
-        country: shippingDetails.country || "",
-        zipCode: shippingDetails.zipCode || ""
-      }
-    }).catch((err) => console.error("ASYNC_ORDER_EMAIL_ERROR:", err));
+    // Send Order Confirmation & Admin Notification Emails
+    try {
+      await EmailService.sendOrderPlacedEmails({
+        orderId: order.id,
+        total,
+        items: emailItems,
+        shippingDetails: {
+          firstName: shippingDetails.firstName || "Customer",
+          lastName: shippingDetails.lastName || "",
+          email: shippingDetails.email || (session?.user as any)?.email || "",
+          address: shippingDetails.address || "",
+          city: shippingDetails.city || "",
+          country: shippingDetails.country || "",
+          zipCode: shippingDetails.zipCode || ""
+        }
+      });
+    } catch (emailErr) {
+      console.error("ASYNC_ORDER_EMAIL_ERROR:", emailErr);
+    }
 
     return NextResponse.json({ success: true, orderId: order.id, transactionId: paymentResult.transactionId });
   } catch (error: any) {

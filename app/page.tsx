@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HorizontalScroll from "@/components/HorizontalScroll";
 import WishlistButton from "@/components/WishlistButton";
+import OrderTrackingBanner from "@/components/OrderTrackingBanner";
 import { SettingsService } from "@/server/services/settings.service";
 import { ProductService } from "@/server/services/product.service";
 
@@ -66,6 +67,9 @@ export default async function Home() {
                 {settings.heroSubheading}
               </p>
             )}
+            {/* Order Tracking Banner Above Discover Now Button */}
+            <OrderTrackingBanner />
+
             {settings.heroButtonText && (
               <Link
                 href={settings.heroButtonLink || "/shop"}

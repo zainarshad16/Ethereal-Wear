@@ -38,17 +38,21 @@ export async function PATCH(
 
     // Send Status Update Email to Customer
     if (updatedOrder.user?.email) {
-      EmailService.sendOrderStatusUpdateEmail({
-        orderId: updatedOrder.id,
-        newStatus: status,
-        customerEmail: updatedOrder.user.email,
-        customerName: updatedOrder.user.name || "Customer",
-        total: updatedOrder.total,
-        items: updatedOrder.items.map((it) => ({
-          name: it.product.name,
-          quantity: it.quantity
-        }))
-      }).catch((err) => console.error("ASYNC_STATUS_EMAIL_ERROR:", err));
+      try {
+        await EmailService.sendOrderStatusUpdateEmail({
+          orderId: updatedOrder.id,
+          newStatus: status,
+          customerEmail: updatedOrder.user.email,
+          customerName: updatedOrder.user.name || "Customer",
+          total: updatedOrder.total,
+          items: updatedOrder.items.map((it) => ({
+            name: it.product.name,
+            quantity: it.quantity
+          }))
+        });
+      } catch (emailErr) {
+        console.error("FAILED_TO_SEND_CUSTOMER_STATUS_EMAIL:", emailErr);
+      }
     }
 
     return NextResponse.json({ success: true, order: updatedOrder });

@@ -298,29 +298,39 @@ export class EmailService {
     total: number;
     items?: Array<{ name: string; quantity: number }>;
   }) {
-    const { orderId, newStatus, customerEmail, customerName, total } = params;
-    const formattedOrderId = orderId.slice(-8).toUpperCase();
+    const { orderId, newStatus, customerEmail, customerName, total, items = [] } = params;
+    const formattedOrderId = orderId.slice(-6).toUpperCase();
+    const trackingCode = `#${formattedOrderId}`;
+    const baseUrl = process.env.NEXTAUTH_URL || "https://ethereal-wear-g5lh.vercel.app";
+    const trackingUrl = `${baseUrl}/?track=${formattedOrderId}`;
 
-    const statusDisplayMap: Record<string, { title: string; color: string; message: string }> = {
+    const statusDisplayMap: Record<
+      string,
+      { title: string; color: string; message: string; step: number }
+    > = {
+      PENDING: {
+        title: "Order Placed",
+        color: "#f59e0b",
+        message: "Your order has been recorded and is pending review.",
+        step: 1,
+      },
       PAID: {
-        title: "Payment Confirmed & In Preparation",
+        title: "In Preparation (Paid)",
         color: "#3b82f6",
-        message: "Your payment has been successfully verified. Our team is handcrafting and packaging your order.",
+        message: "Your payment has been successfully confirmed. Our atelier is handcrafting and packaging your order.",
+        step: 2,
       },
       SHIPPED: {
         title: "Order Shipped (In Transit)",
         color: "#8b5cf6",
-        message: "Great news! Your package has been dispatched and is currently on its way to your delivery address.",
+        message: "Great news! Your package has been dispatched and is currently on its way with our express courier service.",
+        step: 3,
       },
       DELIVERED: {
         title: "Order Delivered",
         color: "#10b981",
-        message: "Your order has been delivered! We hope you love your new Ethereal Wear pieces. If you have any feedback, please reach out to us.",
-      },
-      PENDING: {
-        title: "Order Pending",
-        color: "#f59e0b",
-        message: "Your order status has been updated to pending review.",
+        message: "Your order has been safely delivered! We hope you love your new Ethereal Wear pieces.",
+        step: 4,
       },
     };
 
@@ -328,7 +338,10 @@ export class EmailService {
       title: `Status: ${newStatus}`,
       color: "#18181b",
       message: `Your order status has been updated to ${newStatus}.`,
+      step: 2,
     };
+
+    const currentStep = statusInfo.step;
 
     const statusHtml = `
       <!DOCTYPE html>
@@ -336,13 +349,15 @@ export class EmailService {
       <head>
         <meta charset="utf-8">
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; color: #1a1a1a; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; color: #1a1a1a; }
           .container { max-width: 600px; margin: 30px auto; background-color: #ffffff; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; }
           .header { background-color: #000000; color: #ffffff; padding: 32px 24px; text-align: center; }
           .header h1 { font-family: Georgia, serif; font-size: 26px; letter-spacing: 4px; margin: 0; font-weight: normal; }
           .content { padding: 32px 28px; }
-          .status-badge { display: inline-block; background-color: ${statusInfo.color}; color: #ffffff; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+          .status-badge { display: inline-block; background-color: ${statusInfo.color}; color: #ffffff; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+          .tracking-box { background-color: #111111; color: #ffffff; border-radius: 10px; padding: 20px; text-align: center; margin: 20px 0; }
           .message-box { background-color: #fafafa; border-left: 4px solid ${statusInfo.color}; padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 24px; font-size: 14px; line-height: 1.6; color: #333333; }
+          .btn-track { display: inline-block; background-color: #000000; color: #ffffff !important; padding: 14px 28px; text-decoration: none; border-radius: 9999px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin: 12px 0 24px; }
           .footer { background-color: #f7f7f7; padding: 24px; text-align: center; font-size: 12px; color: #888888; border-top: 1px solid #eaeaea; }
           .footer a { color: #111111; text-decoration: none; font-weight: 600; }
         </style>
@@ -351,23 +366,59 @@ export class EmailService {
         <div class="container">
           <div class="header">
             <h1>ETHEREAL WEAR</h1>
+            <p style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #a0a0a0; margin: 8px 0 0;">Order Status Notification</p>
           </div>
           <div class="content">
-            <span class="status-badge">${statusInfo.title}</span>
-            <h2 style="margin: 0 0 12px; font-size: 20px;">Order #${formattedOrderId} Update</h2>
-            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Hello ${customerName || "Valued Customer"},</p>
+            <div style="text-align: center;">
+              <span class="status-badge">${statusInfo.title}</span>
+            </div>
             
+            <h2 style="margin: 0 0 10px; font-size: 20px; text-align: center;">Update for ${customerName || "Valued Customer"}</h2>
+
+            <!-- Prominent Tracking Number Box -->
+            <div class="tracking-box">
+              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; margin-bottom: 6px;">Your Official Tracking Number</div>
+              <div style="font-family: monospace, Courier, sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 5px; color: #ffffff;">${trackingCode}</div>
+              <div style="font-size: 12px; color: #d1d5db; margin-top: 6px;">Use this tracking number anytime on our website to track your parcel</div>
+            </div>
+
+            <!-- Status Explanation -->
             <div class="message-box">
               ${statusInfo.message}
             </div>
 
-            <div style="background-color: #fafafa; border: 1px solid #ededed; border-radius: 8px; padding: 14px 18px; font-size: 13px; display: flex; justify-content: space-between;">
-              <span>Order Reference: <strong>#${formattedOrderId}</strong></span>
-              <span>Total: <strong>Rs.${total.toFixed(2)}</strong></span>
+            <!-- Direct 1-Click Track Button -->
+            <div style="text-align: center;">
+              <a href="${trackingUrl}" class="btn-track">Track Your Order Online &rarr;</a>
             </div>
+
+            <!-- Order Details -->
+            <div style="background-color: #fafafa; border: 1px solid #ededed; border-radius: 8px; padding: 16px; font-size: 13px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #666;">Tracking Number:</span>
+                <strong>${trackingCode}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #666;">Current Status:</span>
+                <strong style="color: ${statusInfo.color};">${statusInfo.title}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #666;">Total Amount:</span>
+                <strong>Rs.${total.toFixed(2)}</strong>
+              </div>
+            </div>
+
+            ${items.length > 0 ? `
+              <div style="margin-top: 20px;">
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 8px;">Items in this order</div>
+                <ul style="padding-left: 20px; margin: 0; font-size: 13px; line-height: 1.8; color: #444;">
+                  ${items.map(it => `<li><strong>${it.name}</strong> × ${it.quantity}</li>`).join("")}
+                </ul>
+              </div>
+            ` : ""}
           </div>
           <div class="footer">
-            Have questions about your delivery? Reply directly to this email or visit <a href="${process.env.NEXTAUTH_URL || "https://ethereal-wear-g5lh.vercel.app"}">Ethereal Wear</a>.
+            Have questions about your order? Reply directly to this email or visit <a href="${baseUrl}">Ethereal Wear</a>.
           </div>
         </div>
       </body>

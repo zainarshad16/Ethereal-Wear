@@ -55,6 +55,7 @@ export default function OrdersList({ orders: initialOrders }: { orders: OrderWit
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
       );
+      toast.success(`Order #${orderId.slice(-6).toUpperCase()} updated to ${newStatus} & email sent to customer!`);
     } catch (err) {
       console.error(err);
       toast.error("An error occurred while updating the status.");
@@ -119,7 +120,7 @@ export default function OrdersList({ orders: initialOrders }: { orders: OrderWit
                 <th className="px-6 py-5 font-semibold">Customer & Email</th>
                 <th className="px-6 py-5 font-semibold">Purchased Items</th>
                 <th className="px-6 py-5 font-semibold">Date</th>
-                <th className="px-6 py-5 font-semibold">Status Status</th>
+                <th className="px-6 py-5 font-semibold">Status</th>
                 <th className="px-6 py-5 font-semibold text-right">Total Amount</th>
               </tr>
             </thead>
