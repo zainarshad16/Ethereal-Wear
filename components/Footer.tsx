@@ -1,4 +1,5 @@
 import Link from "next/link";
+import NewsletterForm from "./NewsletterForm";
 
 export default function Footer() {
   return (
@@ -31,10 +32,7 @@ export default function Footer() {
         <div>
           <h4 className="text-xs font-bold tracking-[0.2em] mb-6">NEWSLETTER</h4>
           <p className="text-gray-400 text-sm mb-4">Subscribe to receive updates, access to exclusive deals, and more.</p>
-          <div className="flex border-b border-gray-600 pb-2">
-            <input type="email" placeholder="Enter your email address" className="bg-transparent border-none focus:ring-0 text-sm w-full text-white placeholder:text-gray-500 p-0" />
-            <button className="text-xs font-bold tracking-widest pl-4 hover:text-gray-300">SUBSCRIBE</button>
-          </div>
+          <NewsletterForm />
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">

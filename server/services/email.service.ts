@@ -446,4 +446,92 @@ export class EmailService {
       console.log(`=======================================================================\n`);
     }
   }
+
+  /**
+   * Send VIP Newsletter Welcome Email with 10% Discount Code & Notify Admin
+   */
+  static async sendNewsletterWelcomeEmail(subscriberEmail: string) {
+    const baseUrl = process.env.NEXTAUTH_URL || "https://ethereal-wear-g5lh.vercel.app";
+    const discountCode = "ETHEREAL10";
+
+    const welcomeHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; color: #1a1a1a; }
+          .container { max-width: 600px; margin: 30px auto; background-color: #ffffff; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; }
+          .header { background-color: #000000; color: #ffffff; padding: 36px 24px; text-align: center; }
+          .header h1 { font-family: Georgia, serif; font-size: 28px; letter-spacing: 5px; margin: 0; font-weight: normal; }
+          .content { padding: 36px 28px; text-align: center; }
+          .title { font-size: 22px; font-weight: 700; margin-bottom: 12px; font-family: Georgia, serif; }
+          .desc { font-size: 14px; color: #555555; line-height: 1.7; margin-bottom: 24px; }
+          .code-box { background-color: #f4f4f5; border: 2px dashed #18181b; border-radius: 8px; padding: 20px; margin: 24px auto; max-width: 320px; }
+          .code-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #71717a; margin-bottom: 6px; }
+          .code-val { font-family: monospace; font-size: 26px; font-weight: 700; letter-spacing: 4px; color: #000000; }
+          .btn { display: inline-block; background-color: #000000; color: #ffffff !important; padding: 14px 32px; text-decoration: none; border-radius: 9999px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-top: 20px; }
+          .footer { background-color: #f7f7f7; padding: 24px; text-align: center; font-size: 12px; color: #888888; border-top: 1px solid #eaeaea; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>ETHEREAL WEAR</h1>
+          </div>
+          <div class="content">
+            <h2 class="title">Welcome to the Ethereal Circle</h2>
+            <p class="desc">
+              Thank you for subscribing to our private mailing list. As an insider, you will receive early access to new collections, secret capsule drops, and private sales.
+            </p>
+
+            <div class="code-box">
+              <div class="code-label">Your Exclusive 10% Off Welcome Code</div>
+              <div class="code-val">${discountCode}</div>
+            </div>
+
+            <p style="font-size: 12px; color: #888888;">Apply code <strong>${discountCode}</strong> at checkout on your next purchase.</p>
+
+            <a href="${baseUrl}/shop" class="btn">Explore The Collection &rarr;</a>
+          </div>
+          <div class="footer">
+            You are receiving this email because you subscribed on <a href="${baseUrl}" style="color: #000000; font-weight: 600;">Ethereal Wear</a>.
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const adminEmail = process.env.ADMIN_EMAIL || "zainarshad110@gmail.com";
+    const transporter = getTransporter();
+
+    if (transporter) {
+      try {
+        // 1. Send Welcome Email to Subscriber
+        await transporter.sendMail({
+          from: this.getFromAddress(),
+          to: subscriberEmail,
+          subject: "✨ Welcome to Ethereal Wear — Your 10% Off Welcome Gift",
+          html: welcomeHtml,
+        });
+        console.log(`[EmailService] Newsletter welcome sent to ${subscriberEmail}`);
+
+        // 2. Send Alert to Admin
+        await transporter.sendMail({
+          from: this.getFromAddress(),
+          to: adminEmail,
+          subject: `[New Subscriber] ${subscriberEmail} joined the newsletter`,
+          html: `<p>A new visitor just subscribed to your newsletter: <strong>${subscriberEmail}</strong></p>`,
+        });
+        console.log(`[EmailService] Admin newsletter alert sent to ${adminEmail}`);
+      } catch (err: any) {
+        console.error("[EmailService] Failed to dispatch newsletter emails:", err.message);
+      }
+    } else {
+      console.log(`\n================= 📧 EMAIL SIMULATION (NEWSLETTER) =================`);
+      console.log(`[To Subscriber]: ${subscriberEmail} | Subject: Welcome to Ethereal Wear`);
+      console.log(`[To Admin]: ${adminEmail} | Subject: [New Subscriber] ${subscriberEmail}`);
+      console.log(`===================================================================\n`);
+    }
+  }
 }
