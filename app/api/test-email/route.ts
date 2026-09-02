@@ -33,12 +33,11 @@ export async function GET(req: Request) {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: { user, pass },
-    });
+    const cleanPass = pass.replace(/\s+/g, "");
+    const transporter =
+      host.includes("gmail") || (user && user.endsWith("@gmail.com"))
+        ? nodemailer.createTransport({ service: "gmail", auth: { user, pass: cleanPass } })
+        : nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass: cleanPass } });
 
     const info = await transporter.sendMail({
       from,

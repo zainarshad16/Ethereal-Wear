@@ -6,10 +6,18 @@ function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT) || 465;
   const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD;
+  const pass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD || "").replace(/\s+/g, "");
 
   if (!user || !pass) {
     return null;
+  }
+
+  // If using Gmail, service: "gmail" provides best serverless compatibility
+  if (host.includes("gmail") || (user && user.endsWith("@gmail.com"))) {
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: { user, pass },
+    });
   }
 
   return nodemailer.createTransport({
