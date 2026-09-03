@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusIcon, PhotoIcon, TrashIcon, PencilIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PhotoIcon, TrashIcon, PencilIcon, ArrowUpIcon, ArrowDownIcon, TagIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-hot-toast";
@@ -35,6 +35,12 @@ interface Product {
   createdAt: string;
 }
 
+interface CategoryItem {
+  title: string;
+  link: string;
+  img?: string;
+}
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,9 +51,85 @@ export default function AdminProductsPage() {
   const [isOnSale, setIsOnSale] = useState(false);
   const [sizeStock, setSizeStock] = useState({ XS: 0, S: 0, M: 0, L: 0, XL: 0 });
 
+  // Dynamic Categories State
+  const [categoriesList, setCategoriesList] = useState<CategoryItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
+  const [isInlineAddingCat, setIsInlineAddingCat] = useState(false);
+  const [inlineCategoryInput, setInlineCategoryInput] = useState("");
+  const [newModalCategoryName, setNewModalCategoryName] = useState("");
+  const [savingCategory, setSavingCategory] = useState(false);
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories");
+      const data = await res.json();
+      if (data.categories && Array.isArray(data.categories)) {
+        setCategoriesList(data.categories);
+        if (!selectedCategory && data.categories.length > 0) {
+          setSelectedCategory(data.categories[0].title);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    }
+  };
+
+  const handleAddCategory = async (title: string, img?: string) => {
+    if (!title.trim()) return;
+    setSavingCategory(true);
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim(), img }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to add category");
+      }
+      setCategoriesList(data.categories);
+      setSelectedCategory(title.trim());
+      toast.success(`Category "${title.trim()}" added!`);
+      return true;
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add category");
+      return false;
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (title: string) => {
+    const associatedCount = products.filter((p) => p.category.toLowerCase() === title.toLowerCase()).length;
+    const confirmMessage = associatedCount > 0
+      ? `"${title}" has ${associatedCount} product(s) assigned to it. Are you sure you want to delete this category?`
+      : `Are you sure you want to delete category "${title}"?`;
+
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      const res = await fetch(`/api/categories?title=${encodeURIComponent(title)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete category");
+      }
+      setCategoriesList(data.categories);
+      if (selectedCategory.toLowerCase() === title.toLowerCase()) {
+        setSelectedCategory(data.categories[0]?.title || "");
+      }
+      toast.success(`Category "${title}" deleted!`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete category");
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -98,6 +180,7 @@ export default function AdminProductsPage() {
     setSelectedProduct(product);
     setDescription(product.description || "");
     setIsOnSale(product.isOnSale || false);
+    setSelectedCategory(product.category);
     
     // Combine existing imageUrl and hoverImageUrl if images array is empty (for legacy products)
     let prodImages = product.images || [];
@@ -120,12 +203,10 @@ export default function AdminProductsPage() {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
       if (res.ok) {
         fetchProducts();
-        toast.success("Product deleted");
-      } else {
-        toast.error("Failed to delete product");
+        toast.success("Product deleted successfully!");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error("Failed to delete product:", error);
     }
   };
 
@@ -169,7 +250,7 @@ export default function AdminProductsPage() {
       name: formData.get("name"),
       description: description,
       price: formData.get("price"),
-      category: formData.get("category"),
+      category: selectedCategory || formData.get("category"),
       stock: totalStock,
       sizeStock: sizeStock,
       sku: formData.get("sku"),
@@ -226,29 +307,44 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-gray-900">Products</h2>
-        <button
-          onClick={() => {
-            setIsAdding(!isAdding);
-            if (!isAdding) {
-              setEditingId(null);
-              setSelectedProduct(null);
-              setDescription("");
-              setIsOnSale(false);
-              setImages([]);
-              setSizeStock({ XS: 0, S: 0, M: 0, L: 0, XL: 0 });
-            }
-          }}
-          className="bg-black text-white px-4 py-2 rounded-lg flex items-center text-sm hover:bg-gray-800 transition-colors"
-        >
-          <PlusIcon className="h-4 w-4 mr-2" />
-          {isAdding ? "Cancel" : "Add Product"}
-        </button>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900">Products</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Manage store inventory, pricing, and categories.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsManageCategoriesOpen(true)}
+            className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center text-sm font-medium hover:bg-gray-50 transition-colors shadow-xs"
+          >
+            <TagIcon className="h-4 w-4 mr-2 text-gray-500" />
+            Manage Categories ({categoriesList.length})
+          </button>
+          <button
+            onClick={() => {
+              setIsAdding(!isAdding);
+              if (!isAdding) {
+                setEditingId(null);
+                setSelectedProduct(null);
+                setDescription("");
+                setIsOnSale(false);
+                setImages([]);
+                setSizeStock({ XS: 0, S: 0, M: 0, L: 0, XL: 0 });
+                if (categoriesList.length > 0) {
+                  setSelectedCategory(categoriesList[0].title);
+                }
+              }
+            }}
+            className="bg-black text-white px-4 py-2 rounded-lg flex items-center text-sm hover:bg-gray-800 transition-colors shadow-xs"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            {isAdding ? "Cancel" : "Add Product"}
+          </button>
+        </div>
       </div>
 
       {isAdding && (
-        <form key={editingId || 'new'} id="product-form" onSubmit={handleSubmitProduct} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <form key={editingId || 'new'} id="product-form" onSubmit={handleSubmitProduct} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 animate-fade-in">
           {/* Left Column: Details & Inventory */}
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white p-8 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100">
@@ -256,7 +352,7 @@ export default function AdminProductsPage() {
               <div className="space-y-6">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500">Product Name</label>
-                  <input name="name" required defaultValue={selectedProduct?.name || ""} className="w-full border-b border-gray-200 py-3 bg-transparent focus:outline-none focus:border-black transition-colors text-sm" placeholder="e.g. Summer Linen Dress" />
+                  <input name="name" required defaultValue={selectedProduct?.name || ""} className="w-full border-b border-gray-200 py-3 bg-transparent focus:outline-none focus:border-black transition-colors text-sm font-medium" placeholder="e.g. Summer Linen Dress" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500 mb-2 block">Description</label>
@@ -264,14 +360,70 @@ export default function AdminProductsPage() {
                     <ReactQuill theme="snow" value={description} onChange={setDescription} className="h-32 mb-10" />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500">Category</label>
-                  <select name="category" required defaultValue={selectedProduct?.category || "Skirts"} className="w-full border-b border-gray-200 py-3 bg-transparent focus:outline-none focus:border-black transition-colors text-sm text-gray-700">
-                    <option value="Skirts">Skirts</option>
-                    <option value="Tops">Tops</option>
-                    <option value="Dresses">Dresses</option>
-                    <option value="Bottoms">Bottoms</option>
-                    <option value="Accessories">Accessories</option>
+
+                {/* Dynamic Category Selector with Inline Creator */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500">Category</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsInlineAddingCat(!isInlineAddingCat)}
+                      className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <PlusIcon className="w-3.5 h-3.5" />
+                      <span>{isInlineAddingCat ? "Cancel" : "+ New Category"}</span>
+                    </button>
+                  </div>
+
+                  {isInlineAddingCat && (
+                    <div className="flex items-center gap-2 p-3 bg-blue-50/60 border border-blue-200 rounded-xl animate-fade-in">
+                      <input
+                        type="text"
+                        value={inlineCategoryInput}
+                        onChange={(e) => setInlineCategoryInput(e.target.value)}
+                        placeholder="Type new category name (e.g. Blazers)..."
+                        className="flex-1 bg-white border border-gray-300 px-3 py-1.5 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-black"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (inlineCategoryInput.trim()) {
+                              handleAddCategory(inlineCategoryInput.trim());
+                              setInlineCategoryInput("");
+                              setIsInlineAddingCat(false);
+                            }
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        disabled={savingCategory || !inlineCategoryInput.trim()}
+                        onClick={async () => {
+                          if (!inlineCategoryInput.trim()) return;
+                          const ok = await handleAddCategory(inlineCategoryInput.trim());
+                          if (ok) {
+                            setInlineCategoryInput("");
+                            setIsInlineAddingCat(false);
+                          }
+                        }}
+                        className="bg-black text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                      >
+                        {savingCategory ? "Adding..." : "Add"}
+                      </button>
+                    </div>
+                  )}
+
+                  <select
+                    name="category"
+                    required
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full border-b border-gray-200 py-3 bg-transparent focus:outline-none focus:border-black transition-colors text-sm text-gray-700 font-medium cursor-pointer"
+                  >
+                    {categoriesList.map((cat) => (
+                      <option key={cat.title} value={cat.title}>
+                        {cat.title}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -282,7 +434,7 @@ export default function AdminProductsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500">Price ($)</label>
-                  <input name="price" type="number" step="0.01" required defaultValue={selectedProduct?.price || ""} className="w-full border-b border-gray-200 py-3 bg-transparent focus:outline-none focus:border-black transition-colors text-sm" placeholder="0.00" />
+                  <input name="price" type="number" step="0.01" required defaultValue={selectedProduct?.price || ""} className="w-full border-b border-gray-200 py-3 bg-transparent focus:outline-none focus:border-black transition-colors text-sm font-medium" placeholder="0.00" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500">SKU (Optional)</label>
@@ -489,6 +641,124 @@ export default function AdminProductsPage() {
           </table>
         </div>
       </div>
+
+      {/* Manage Categories Modal */}
+      {isManageCategoriesOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-gray-100 max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
+              <div>
+                <h3 className="text-xl font-bold font-serif text-gray-900">Manage Categories</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Add or remove categories for your store.</p>
+              </div>
+              <button
+                onClick={() => setIsManageCategoriesOpen(false)}
+                className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Add New Category Section */}
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-6">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 block mb-2">
+                Create New Category
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newModalCategoryName}
+                  onChange={(e) => setNewModalCategoryName(e.target.value)}
+                  placeholder="e.g. Silk Scarves, Blazers..."
+                  className="flex-1 bg-white border border-gray-300 rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-black"
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (newModalCategoryName.trim()) {
+                        const ok = await handleAddCategory(newModalCategoryName.trim());
+                        if (ok) setNewModalCategoryName("");
+                      }
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={savingCategory || !newModalCategoryName.trim()}
+                  onClick={async () => {
+                    if (!newModalCategoryName.trim()) return;
+                    const ok = await handleAddCategory(newModalCategoryName.trim());
+                    if (ok) setNewModalCategoryName("");
+                  }}
+                  className="bg-black text-white px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  <span>{savingCategory ? "Adding..." : "Add"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Existing Categories List */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-2.5">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                Active Categories ({categoriesList.length})
+              </div>
+              {categoriesList.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-6">No categories found.</p>
+              ) : (
+                categoriesList.map((cat) => {
+                  const productCount = products.filter(
+                    (p) => p.category.toLowerCase() === cat.title.toLowerCase()
+                  ).length;
+
+                  return (
+                    <div
+                      key={cat.title}
+                      className="flex items-center justify-between bg-white border border-gray-100 hover:border-gray-200 p-3 rounded-2xl shadow-2xs transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center flex-shrink-0">
+                          {cat.img ? (
+                            <img src={cat.img} alt={cat.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <TagIcon className="w-4 h-4 text-gray-400" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-900">{cat.title}</p>
+                          <p className="text-[10px] text-gray-500">
+                            {productCount} {productCount === 1 ? "product" : "products"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(cat.title)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        title={`Delete ${cat.title}`}
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-gray-100 pt-4 mt-6 text-right">
+              <button
+                type="button"
+                onClick={() => setIsManageCategoriesOpen(false)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-5 py-2 rounded-xl text-xs font-bold transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -23,6 +23,8 @@ export default function AdminSettingsPage() {
   const [categories, setCategories] = useState<{title: string, link: string, img: string}[]>([]);
   const [highlights, setHighlights] = useState<{title: string, subtitle: string, description: string, img: string, link: string, bgColor?: string}[]>([]);
   const [reviews, setReviews] = useState<string[]>([]);
+  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [heroUrlInput, setHeroUrlInput] = useState("");
 
   useEffect(() => {
     fetch("/api/settings")
@@ -37,6 +39,19 @@ export default function AdminSettingsPage() {
           heroImage: data.heroImage || "",
         });
         
+        let parsedHeroImages: string[] = [];
+        if (data.heroImage) {
+          if (data.heroImage.trim().startsWith("[")) {
+            try { parsedHeroImages = JSON.parse(data.heroImage); } catch {}
+          } else {
+            parsedHeroImages = [data.heroImage];
+          }
+        }
+        if (parsedHeroImages.length === 0) {
+          parsedHeroImages = ["https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"];
+        }
+        setHeroImages(parsedHeroImages);
+
         try { if(data.categories) setCategories(JSON.parse(data.categories)); } catch(e) {}
         try { if(data.highlights) setHighlights(JSON.parse(data.highlights)); } catch(e) {}
         try { if(data.reviews) setReviews(JSON.parse(data.reviews)); } catch(e) {}
@@ -47,6 +62,48 @@ export default function AdminSettingsPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSettings({ ...settings, [e.target.name]: e.target.value });
+  };
+
+  const handleHeroImagesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          setHeroImages((prev) => [...prev, reader.result as string]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleMoveHeroImage = (index: number, direction: 'left' | 'right') => {
+    if (direction === 'left' && index === 0) return;
+    if (direction === 'right' && index === heroImages.length - 1) return;
+
+    setHeroImages((prev) => {
+      const newImages = [...prev];
+      const targetIndex = direction === 'left' ? index - 1 : index + 1;
+      [newImages[index], newImages[targetIndex]] = [newImages[targetIndex], newImages[index]];
+      return newImages;
+    });
+  };
+
+  const handleRemoveHeroImage = (indexToRemove: number) => {
+    if (heroImages.length <= 1) {
+      toast.error("Please keep at least one background image for the hero banner.");
+      return;
+    }
+    setHeroImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const handleAddHeroUrl = () => {
+    if (!heroUrlInput.trim()) return;
+    setHeroImages((prev) => [...prev, heroUrlInput.trim()]);
+    setHeroUrlInput("");
+    toast.success("Hero image added!");
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
@@ -66,6 +123,7 @@ export default function AdminSettingsPage() {
     try {
       const payload = {
         ...settings,
+        heroImage: JSON.stringify(heroImages),
         categories: JSON.stringify(categories),
         highlights: JSON.stringify(highlights),
         reviews: JSON.stringify(reviews)
@@ -101,32 +159,134 @@ export default function AdminSettingsPage() {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4">Hero Section</h2>
-          <div className="grid grid-cols-1 gap-4">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-xl font-semibold">Hero Section Slideshow</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Upload unlimited background images that will automatically slide across the homepage banner.</p>
+            </div>
+            <span className="text-xs font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-full border">
+              {heroImages.length} {heroImages.length === 1 ? "Image" : "Images in Carousel"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Heading</label>
-              <input type="text" name="heroHeading" value={settings.heroHeading} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md" />
+              <input type="text" name="heroHeading" value={settings.heroHeading} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md font-serif text-lg" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Subheading</label>
               <input type="text" name="heroSubheading" value={settings.heroSubheading} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Button Text</label>
-              <input type="text" name="heroButtonText" value={settings.heroButtonText} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Button Text</label>
+                <input type="text" name="heroButtonText" value={settings.heroButtonText} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Button Link</label>
+                <input type="text" name="heroButtonLink" value={settings.heroButtonLink} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md" />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Button Link</label>
-              <input type="text" name="heroButtonLink" value={settings.heroButtonLink} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Background Image</label>
-              <div className="flex items-center gap-4">
-                {settings.heroImage && <img src={settings.heroImage} alt="Hero" className="w-16 h-16 object-cover rounded-md border" />}
-                <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md text-sm font-medium border flex items-center">
-                  <PhotoIcon className="w-4 h-4 mr-2" /> Upload Image
-                  <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e, (base64) => setSettings({...settings, heroImage: base64}))} />
+
+            {/* Unlimited Multi-Image Hero Carousel Upload */}
+            <div className="border-t border-gray-100 pt-6">
+              <label className="block text-sm font-bold text-gray-800 mb-2">
+                Hero Background Slideshow Images (No Upload Restrictions)
+              </label>
+              <p className="text-xs text-gray-500 mb-4">
+                Select multiple files or upload as many images as you want. The homepage hero will cross-fade through all of them smoothly.
+              </p>
+
+              {/* Upload Controls */}
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <label className="cursor-pointer bg-black text-white hover:bg-gray-800 px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center shadow-xs transition-colors">
+                  <PhotoIcon className="w-4 h-4 mr-2" /> Upload Images (Select Multiple)
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleHeroImagesUpload}
+                  />
                 </label>
+
+                {/* Paste URL */}
+                <div className="flex items-center gap-2 flex-1 min-w-[280px]">
+                  <input
+                    type="text"
+                    placeholder="Or paste image URL (https://...)"
+                    value={heroUrlInput}
+                    onChange={(e) => setHeroUrlInput(e.target.value)}
+                    className="flex-1 border border-gray-300 px-3 py-2 rounded-lg text-xs"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddHeroUrl();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddHeroUrl}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors"
+                  >
+                    Add URL
+                  </button>
+                </div>
+              </div>
+
+              {/* Slides Grid Preview with Reordering & Deletion */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {heroImages.map((imgUrl, idx) => (
+                  <div
+                    key={idx}
+                    className="group relative aspect-[4/3] rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-xs"
+                  >
+                    <img
+                      src={imgUrl}
+                      alt={`Hero Slide ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+
+                    {/* Badge */}
+                    <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                      {idx === 0 ? "★ Slide #1 (Default)" : `Slide #${idx + 1}`}
+                    </div>
+
+                    {/* Action Bar on Hover */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveHeroImage(idx, 'left')}
+                        disabled={idx === 0}
+                        className="p-1.5 bg-white text-gray-800 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white transition-colors"
+                        title="Move Left"
+                      >
+                        <ArrowUpIcon className="w-3.5 h-3.5 -rotate-90" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleMoveHeroImage(idx, 'right')}
+                        disabled={idx === heroImages.length - 1}
+                        className="p-1.5 bg-white text-gray-800 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-white transition-colors"
+                        title="Move Right"
+                      >
+                        <ArrowDownIcon className="w-3.5 h-3.5 -rotate-90" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveHeroImage(idx)}
+                        className="p-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        title="Delete Slide"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

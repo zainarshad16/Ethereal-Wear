@@ -30,6 +30,7 @@ export interface StoreSettingsData {
   heroButtonText: string;
   heroButtonLink: string;
   heroImage: string;
+  heroImages: string[];
   categories: CategorySetting[];
   highlights: HighlightSetting[];
   reviews: ReviewSetting[];
@@ -49,7 +50,8 @@ export class SettingsService {
           heroSubheading: "Lightweight linens and effortless silhouettes.",
           heroButtonText: "DISCOVER NOW",
           heroButtonLink: "/shop",
-          heroImage: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+          heroImage: "/hero_luxury.jpg",
+          heroImages: ["/hero_luxury.jpg"],
           categories: [],
           highlights: [],
           reviews: []
@@ -59,6 +61,24 @@ export class SettingsService {
     let parsedCategories: CategorySetting[] = [];
     let parsedHighlights: HighlightSetting[] = [];
     let parsedReviews: ReviewSetting[] = [];
+    let parsedHeroImages: string[] = [];
+
+    // Parse hero images (supports either single URL or JSON array)
+    if (settings.heroImage) {
+      if (settings.heroImage.trim().startsWith("[")) {
+        try {
+          parsedHeroImages = JSON.parse(settings.heroImage);
+        } catch {
+          parsedHeroImages = [settings.heroImage];
+        }
+      } else {
+        parsedHeroImages = [settings.heroImage];
+      }
+    }
+
+    if (parsedHeroImages.length === 0) {
+      parsedHeroImages = ["/hero_luxury.jpg"];
+    }
 
     if (settings.categories) {
       try { parsedCategories = JSON.parse(settings.categories); } catch (e) { parsedCategories = []; }
@@ -95,7 +115,8 @@ export class SettingsService {
       heroSubheading: settings.heroSubheading || "",
       heroButtonText: settings.heroButtonText || "",
       heroButtonLink: settings.heroButtonLink || "",
-      heroImage: settings.heroImage || "",
+      heroImage: parsedHeroImages[0] || settings.heroImage || "",
+      heroImages: parsedHeroImages,
       categories: parsedCategories,
       highlights: parsedHighlights,
       reviews: parsedReviews
@@ -109,6 +130,7 @@ export class SettingsService {
       heroButtonText: "DISCOVER NOW",
       heroButtonLink: "/shop",
       heroImage: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
+      heroImages: ["https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"],
       categories: [],
       highlights: [],
       reviews: []

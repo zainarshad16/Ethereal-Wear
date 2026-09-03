@@ -4,13 +4,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HorizontalScroll from "@/components/HorizontalScroll";
 import WishlistButton from "@/components/WishlistButton";
-import OrderTrackingBanner from "@/components/OrderTrackingBanner";
+import HeroSlideshow from "@/components/HeroSlideshow";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { SettingsService } from "@/server/services/settings.service";
 import { ProductService } from "@/server/services/product.service";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const session = await getServerSession(authOptions);
   const settings = await SettingsService.getSettings();
   const newArrivals = await ProductService.getNewArrivals(8);
 
@@ -47,40 +50,15 @@ export default async function Home() {
         categories={categories.map((c) => ({ title: c.title, link: c.link }))}
       />
 
-      {/* Hero Section */}
-      {settings.heroImage && (
-        <section className="relative h-[85vh] w-full bg-gray-100 overflow-hidden flex items-center justify-center">
-          <img
-            src={settings.heroImage}
-            alt="Hero Banner"
-            className="absolute inset-0 w-full h-full object-cover object-top opacity-90"
-          />
-          <div className="absolute inset-0 bg-black/20" />
-          <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
-            {settings.heroHeading && (
-              <h1 className="text-5xl md:text-8xl font-serif tracking-tighter drop-shadow-lg mb-6">
-                {settings.heroHeading}
-              </h1>
-            )}
-            {settings.heroSubheading && (
-              <p className="text-lg md:text-xl font-light mb-10 tracking-wide drop-shadow-md">
-                {settings.heroSubheading}
-              </p>
-            )}
-            {/* Order Tracking Banner Above Discover Now Button */}
-            <OrderTrackingBanner />
-
-            {settings.heroButtonText && (
-              <Link
-                href={settings.heroButtonLink || "/shop"}
-                className="inline-block bg-white text-black px-10 py-4 text-sm font-bold tracking-[0.2em] hover:bg-black hover:text-white transition-colors duration-300 shadow-lg"
-              >
-                {settings.heroButtonText}
-              </Link>
-            )}
-          </div>
-        </section>
-      )}
+      {/* Hero Section Slideshow */}
+      <HeroSlideshow
+        images={settings.heroImages}
+        heroHeading={settings.heroHeading}
+        heroSubheading={settings.heroSubheading}
+        heroButtonText={settings.heroButtonText}
+        heroButtonLink={settings.heroButtonLink}
+        session={session}
+      />
 
       {/* Shop By Category Section */}
       {categories.length > 0 && (

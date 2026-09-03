@@ -302,7 +302,7 @@ export class EmailService {
     const formattedOrderId = orderId.slice(-6).toUpperCase();
     const trackingCode = `#${formattedOrderId}`;
     const baseUrl = process.env.NEXTAUTH_URL || "https://ethereal-wear-g5lh.vercel.app";
-    const trackingUrl = `${baseUrl}/?track=${formattedOrderId}`;
+    const trackingUrl = `${baseUrl}/track-order?track=${formattedOrderId}`;
 
     const statusDisplayMap: Record<
       string,

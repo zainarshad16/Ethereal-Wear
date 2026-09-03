@@ -126,6 +126,20 @@ export default function Header({ bannerText, categories }: HeaderProps) {
                       <p className="font-bold text-gray-900 truncate">{session.user.name || "Customer"}</p>
                       <p className="text-[10px] text-gray-400 truncate mt-0.5">{session.user.email}</p>
                     </div>
+                    <Link
+                      href="/track-order"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="block px-4 py-2 text-gray-900 hover:bg-gray-50 font-bold transition-colors"
+                    >
+                      TRACK ORDERS
+                    </Link>
+                    <Link
+                      href="/account"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="block px-4 py-2 text-gray-900 hover:bg-gray-50 font-bold transition-colors"
+                    >
+                      MY ACCOUNT
+                    </Link>
                     {(session.user as any).role === "ADMIN" && (
                       <Link
                         href="/admin"
