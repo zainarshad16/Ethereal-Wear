@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import * as AuthorizeNet from "authorizenet";
 import { EmailService } from "@/server/services/email.service";
+import { extractFreeShippingThreshold, STANDARD_SHIPPING_FEE } from "@/lib/shippingUtils";
 
 // Promise wrapper for Authorize.net SDK
 function processAuthorizeNetPayment(paymentData: any): Promise<any> {
@@ -134,11 +135,22 @@ export async function POST(req: Request) {
       }
     }
 
-    // Calculate Total
-    let total = 0;
+    // Query store settings for dynamic banner free shipping threshold and shipping fee
+    const storeSettings = await prisma.storeSettings.findUnique({
+      where: { id: "global" }
+    });
+    const freeShippingThreshold = extractFreeShippingThreshold(storeSettings?.topBannerText);
+    const standardShipping = storeSettings?.shippingFee !== undefined && storeSettings?.shippingFee !== null
+      ? Number(storeSettings.shippingFee)
+      : STANDARD_SHIPPING_FEE;
+
+    // Calculate Subtotal & Total with dynamic shipping
+    let subtotal = 0;
     for (const item of items) {
-      total += item.price * item.quantity;
+      subtotal += item.price * item.quantity;
     }
+    const shippingFee = subtotal >= freeShippingThreshold ? 0 : standardShipping;
+    const total = subtotal + shippingFee;
 
     // 2. Process Payment via Authorize.net
     const paymentResult = await processAuthorizeNetPayment({

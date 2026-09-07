@@ -60,7 +60,7 @@ export default async function AdminDashboard() {
   const totalRevenue = revenueData._sum.total || 0;
 
   const stats = [
-    { name: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, icon: CurrencyDollarIcon, trend: "+12.5%", color: "text-emerald-600", bg: "bg-emerald-50" },
+    { name: "Total Revenue", value: `Rs.${totalRevenue.toFixed(2)}`, icon: CurrencyDollarIcon, trend: "+12.5%", color: "text-emerald-600", bg: "bg-emerald-50" },
     { name: "Total Orders", value: totalOrders.toString(), icon: ShoppingBagIcon, trend: "+5.2%", color: "text-blue-600", bg: "bg-blue-50" },
     { name: "Total Products", value: totalProducts.toString(), icon: ArrowTrendingUpIcon, trend: "Stable", color: "text-purple-600", bg: "bg-purple-50" },
     { name: "Total Customers", value: totalCustomers.toString(), icon: UserGroupIcon, trend: "+18.1%", color: "text-amber-600", bg: "bg-amber-50" },
@@ -162,7 +162,7 @@ export default async function AdminDashboard() {
                         </div>
                         <div className="flex items-center justify-between pt-1 border-t border-gray-50">
                           <span className="text-gray-400">Total Spent:</span>
-                          <span className="font-bold text-gray-900 text-sm">${totalSpent.toFixed(2)}</span>
+                          <span className="font-bold text-gray-900 text-sm">Rs.{totalSpent.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -190,7 +190,7 @@ export default async function AdminDashboard() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold text-gray-900 truncate">{item.product?.name || "Item"}</p>
-                                <p className="text-[10px] text-gray-500">Qty: {item.quantity} • ${item.price.toFixed(2)}</p>
+                                <p className="text-[10px] text-gray-500">Qty: {item.quantity} • Rs.{item.price.toFixed(2)}</p>
                               </div>
                             </div>
                           ))}
@@ -285,7 +285,7 @@ export default async function AdminDashboard() {
                           {order.status}
                         </span>
                       </td>
-                      <td className="px-8 py-5 text-right font-semibold text-gray-900">${order.total.toFixed(2)}</td>
+                      <td className="px-8 py-5 text-right font-semibold text-gray-900">Rs.{order.total.toFixed(2)}</td>
                     </tr>
                   ))
                 )}
@@ -326,7 +326,7 @@ export default async function AdminDashboard() {
                     <p className="text-xs text-gray-500 truncate mt-1">{product.category}</p>
                   </div>
                   <div className="text-sm font-bold text-gray-900 bg-white shadow-sm border border-gray-100 px-3 py-1.5 rounded-lg group-hover:bg-black group-hover:text-white transition-colors duration-300">
-                    ${product.price.toFixed(2)}
+                    Rs.{product.price.toFixed(2)}
                   </div>
                 </div>
               ))

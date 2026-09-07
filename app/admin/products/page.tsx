@@ -433,7 +433,7 @@ export default function AdminProductsPage() {
               <h3 className="text-lg font-serif text-gray-900 tracking-tight mb-6">Pricing & Inventory</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500">Price ($)</label>
+                  <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500">Price (Rs.)</label>
                   <input name="price" type="number" step="0.01" required defaultValue={selectedProduct?.price || ""} className="w-full border-b border-gray-200 py-3 bg-transparent focus:outline-none focus:border-black transition-colors text-sm font-medium" placeholder="0.00" />
                 </div>
                 <div className="space-y-1">
@@ -614,7 +614,7 @@ export default function AdminProductsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-900 font-medium">
-                      ${product.price.toFixed(2)}
+                      Rs.{product.price.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-2">

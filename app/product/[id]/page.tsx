@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ProductService } from "@/server/services/product.service";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -6,8 +7,65 @@ import { notFound } from "next/navigation";
 import AddToCartButton from "@/components/AddToCartButton";
 import ProductGallery from "@/components/ProductGallery";
 import WishlistButton from "@/components/WishlistButton";
+import { getBlurPlaceholdersMap } from "@/lib/imageUtils";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const product = await ProductService.getProductById(id);
+
+  if (!product) {
+    return {
+      title: "Product Not Found",
+      description: "The requested luxury garment could not be located.",
+    };
+  }
+
+  const cleanDescription =
+    (product.description || "")
+      .replace(/<[^>]*>/g, "")
+      .trim()
+      .slice(0, 160) ||
+    `Explore ${product.name} from Ethereal Wear. Luxury designer fashion crafted with artisanal excellence.`;
+
+  const ogImages = [
+    product.imageUrl,
+    ...(product.images && Array.isArray(product.images) ? product.images : []),
+  ].filter(Boolean);
+
+  return {
+    title: product.name,
+    description: cleanDescription,
+    alternates: {
+      canonical: `/product/${product.id}`,
+    },
+    openGraph: {
+      title: `${product.name} | Ethereal Wear`,
+      description: cleanDescription,
+      url: `/product/${product.id}`,
+      siteName: "Ethereal Wear",
+      type: "website",
+      images: ogImages.map((url) => ({
+        url,
+        width: 1000,
+        height: 1250,
+        alt: `${product.name} - Luxury Designer Garment`,
+      })),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} | Ethereal Wear`,
+      description: cleanDescription,
+      images: [product.imageUrl],
+      creator: "@etherealwear",
+    },
+  };
+}
 
 export default async function ProductPage({
   params,
@@ -30,12 +88,62 @@ export default async function ProductPage({
     4
   );
 
-  const imagesToPass = currentProduct.images && Array.isArray(currentProduct.images) && currentProduct.images.length > 0 
-    ? currentProduct.images 
-    : [currentProduct.imageUrl, currentProduct.hoverImageUrl].filter(Boolean) as string[];
+  const imagesToPass =
+    currentProduct.images &&
+    Array.isArray(currentProduct.images) &&
+    currentProduct.images.length > 0
+      ? currentProduct.images
+      : ([currentProduct.imageUrl, currentProduct.hoverImageUrl].filter(Boolean) as string[]);
+
+  // Concurrently resolve dynamic blur placeholders for all gallery and related imagery
+  const allImagesToPrecompute = [
+    ...imagesToPass,
+    ...relatedProducts.map((p) => p.imageUrl),
+    ...relatedProducts.map((p) => p.hoverImageUrl),
+  ];
+  const blurDataUrls = await getBlurPlaceholdersMap(allImagesToPrecompute);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
+  const cleanDescription = (currentProduct.description || "")
+    .replace(/<[^>]*>/g, "")
+    .trim() || `${currentProduct.name} - Luxury apparel by Ethereal Wear.`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: currentProduct.name,
+    image: imagesToPass,
+    description: cleanDescription,
+    sku: currentProduct.sku || currentProduct.id,
+    brand: {
+      "@type": "Brand",
+      name: "Ethereal Wear",
+    },
+    offers: {
+      "@type": "Offer",
+      url: `${siteUrl}/product/${currentProduct.id}`,
+      priceCurrency: "PKR",
+      price: currentProduct.price,
+      availability:
+        currentProduct.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+      seller: {
+        "@type": "Organization",
+        name: "Ethereal Wear",
+      },
+    },
+  };
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-gray-200">
+      {/* Schema.org JSON-LD Structured Data for Google Rich Snippets */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex space-x-2 text-xs font-medium text-gray-400 uppercase tracking-widest">
@@ -51,7 +159,11 @@ export default async function ProductPage({
           
           {/* Left Column: Gallery */}
           <div className="h-full">
-             <ProductGallery images={imagesToPass} productName={currentProduct.name} />
+             <ProductGallery
+               images={imagesToPass}
+               productName={currentProduct.name}
+               blurDataUrls={blurDataUrls}
+             />
           </div>
 
           {/* Right Column: Details */}

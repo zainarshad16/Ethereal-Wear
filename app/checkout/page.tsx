@@ -1,7 +1,7 @@
 "use client";
 
 import { useCartStore } from "@/store/cartStore";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { z } from "zod";
+import { extractFreeShippingThreshold, STANDARD_SHIPPING_FEE } from "@/lib/shippingUtils";
 
 const checkoutSchema = z.object({
   firstName: z
@@ -109,8 +110,27 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const [form, setForm] = useState(formInitialState);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(1000);
+  const [standardShippingFee, setStandardShippingFee] = useState(500);
 
-  const total = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.topBannerText) {
+          const threshold = extractFreeShippingThreshold(data.topBannerText);
+          setFreeShippingThreshold(threshold);
+        }
+        if (data?.shippingFee !== undefined && data?.shippingFee !== null) {
+          setStandardShippingFee(Number(data.shippingFee));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const shippingFee = subtotal >= freeShippingThreshold ? 0 : standardShippingFee;
+  const total = subtotal + shippingFee;
 
   // Card Brand Detection
   const getCardBrand = (val: string) => {
@@ -666,11 +686,18 @@ export default function CheckoutPage() {
               <div className="border-t border-gray-100 pt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>Rs.{total.toFixed(2)}</span>
+                  <span>Rs.{subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between items-center text-gray-600">
                   <span>Shipping</span>
-                  <span className="text-emerald-600 font-medium uppercase text-xs tracking-wider">Free Express</span>
+                  {shippingFee === 0 ? (
+                    <span className="text-emerald-600 font-medium uppercase text-xs tracking-wider">Free Express</span>
+                  ) : (
+                    <div className="text-right">
+                      <span className="font-semibold text-gray-900 text-sm">Rs.{shippingFee.toFixed(2)}</span>
+                      <span className="text-[10px] text-gray-400 block tracking-tight">Free over Rs. {freeShippingThreshold.toLocaleString()}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-between text-base font-bold text-gray-900 pt-3 border-t border-gray-100">
                   <span>Total Amount</span>
@@ -684,7 +711,7 @@ export default function CheckoutPage() {
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>30-Day Hassle-Free Returns</span>
+                  <span>3-Day Hassle-Free Returns</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

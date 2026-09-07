@@ -80,7 +80,7 @@ export default async function AccountPage() {
                         </div>
                         <div>
                           <p className="text-gray-500 mb-1">Total</p>
-                          <p className="font-semibold">${order.total.toFixed(2)}</p>
+                          <p className="font-semibold">Rs.{order.total.toFixed(2)}</p>
                         </div>
                         <div>
                           <p className="text-gray-500 mb-1">Order #</p>
@@ -107,7 +107,7 @@ export default async function AccountPage() {
                               <p className="text-gray-500 text-sm mt-1">Qty: {item.quantity}</p>
                             </div>
                             <div className="font-medium text-gray-900">
-                              ${item.price.toFixed(2)}
+                              Rs.{item.price.toFixed(2)}
                             </div>
                           </div>
                         ))}

@@ -101,6 +101,7 @@ model OrderItem {
 model StoreSettings {
   id               String   @id @default("global")
   topBannerText    String   @default("FREE SHIPPING ON ALL ORDERS OVER $100")
+  shippingFee      Float    @default(500)
   heroHeading      String   @default("The Summer Edit")
   heroSubheading   String   @default("Lightweight linens and effortless silhouettes.")
   heroButtonText   String   @default("DISCOVER NOW")
@@ -114,3 +115,4 @@ model StoreSettings {
   
   updatedAt        DateTime @updatedAt
 }
+

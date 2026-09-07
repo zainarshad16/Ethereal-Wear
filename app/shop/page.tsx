@@ -2,9 +2,8 @@ import { ProductService } from "@/server/services/product.service";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
-import { HeartIcon } from "@heroicons/react/24/outline";
-import WishlistButton from "@/components/WishlistButton";
 import MobileFilters from "@/components/MobileFilters";
+import ProductCard from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
 
@@ -106,51 +105,8 @@ export default async function ShopPage({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((product) => (
-                <Link href={`/product/${product.id}`} key={product.id} className="group relative block">
-                  <div className="relative aspect-[3/4] overflow-hidden bg-gray-50 mb-4">
-                    <img 
-                      src={product.imageUrl} 
-                      alt={product.name} 
-                      className={`object-cover w-full h-full transition-all duration-700 ${product.hoverImageUrl ? "group-hover:opacity-0" : "group-hover:scale-105"}`} 
-                    />
-                    {product.hoverImageUrl && (
-                      <img 
-                        src={product.hoverImageUrl} 
-                        alt={`${product.name} Alternate`} 
-                        className="object-cover w-full h-full absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" 
-                      />
-                    )}
-                    <WishlistButton item={{
-                      id: product.id,
-                      name: product.name,
-                      price: product.price,
-                      imageUrl: product.imageUrl,
-                      hoverImageUrl: product.hoverImageUrl,
-                      category: product.category,
-                      isOnSale: product.isOnSale,
-                      salePercentage: product.salePercentage
-                    }} />
-                    {product.isOnSale && (
-                      <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-bold tracking-widest px-2 py-1 uppercase z-20">
-                        SALE
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 group-hover:underline">{product.name}</h3>
-                    <div className="mt-1 flex items-center space-x-2">
-                      {product.isOnSale ? (
-                        <>
-                          <span className="text-sm text-red-600 font-medium">Rs.{(product.price * (1 - (product.salePercentage || 0) / 100)).toFixed(2)}</span>
-                          <span className="text-xs text-gray-400 line-through">Rs.{product.price.toFixed(2)}</span>
-                        </>
-                      ) : (
-                        <span className="text-sm text-gray-600">Rs.{product.price.toFixed(2)}</span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
+              {products.map((product, idx) => (
+                <ProductCard key={product.id} item={product} index={idx} />
               ))}
             </div>
           )}

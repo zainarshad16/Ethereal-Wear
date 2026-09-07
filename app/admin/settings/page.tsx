@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusIcon, TrashIcon, PhotoIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, TrashIcon, PhotoIcon, ArrowUpIcon, ArrowDownIcon, TruckIcon } from "@heroicons/react/24/outline";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "react-hot-toast";
+import { extractFreeShippingThreshold } from "@/lib/shippingUtils";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
@@ -13,6 +14,7 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
     topBannerText: "",
+    shippingFee: 500,
     heroHeading: "",
     heroSubheading: "",
     heroButtonText: "",
@@ -32,6 +34,7 @@ export default function AdminSettingsPage() {
       .then(data => {
         setSettings({
           topBannerText: data.topBannerText || "",
+          shippingFee: data.shippingFee !== undefined && data.shippingFee !== null ? Number(data.shippingFee) : 500,
           heroHeading: data.heroHeading || "",
           heroSubheading: data.heroSubheading || "",
           heroButtonText: data.heroButtonText || "",
@@ -151,10 +154,101 @@ export default function AdminSettingsPage() {
       
       <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4">Top Banner</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Banner Text</label>
-            <input type="text" name="topBannerText" value={settings.topBannerText} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md" />
+          <div className="flex justify-between items-center mb-3">
+            <div>
+              <h2 className="text-xl font-semibold">Top Announcement Marquee Bar</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                This text scrolls continuously in the high-fashion marquee ticker at the very top of the header. Leave blank to hide the banner completely.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Marquee Banner Text</label>
+              <input
+                type="text"
+                name="topBannerText"
+                placeholder="e.g. COMPLIMENTARY WORLDWIDE SHIPPING ON ORDERS OVER Rs. 250 • NEW COLLECTION LIVE"
+                value={settings.topBannerText}
+                onChange={handleChange}
+                className="w-full border border-gray-300 p-2.5 rounded-md text-sm font-mono tracking-wide focus:border-black focus:ring-1 focus:ring-black outline-none"
+              />
+            </div>
+
+            {/* Live Marquee Preview */}
+            {settings.topBannerText && (
+              <div>
+                <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Live Header Preview:</p>
+                <div className="bg-neutral-950 text-neutral-300 py-2 px-4 rounded-md overflow-hidden text-[10px] font-mono tracking-[0.25em] uppercase text-neutral-400">
+                  <div className="animate-marquee whitespace-nowrap flex items-center gap-8">
+                    <span>{settings.topBannerText}</span>
+                    <span className="text-neutral-600">/</span>
+                    <span>{settings.topBannerText}</span>
+                    <span className="text-neutral-600">/</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Shipping & Delivery Rates */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center gap-2 mb-3">
+            <TruckIcon className="w-5 h-5 text-gray-700" />
+            <h2 className="text-xl font-semibold">Shipping & Delivery Rates</h2>
+          </div>
+          <p className="text-xs text-gray-500 mb-5">
+            Configure the standard shipping fee charged at checkout when an order total is below the free shipping threshold.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Standard Shipping Fee (Rs.)
+              </label>
+              <div className="relative rounded-md shadow-xs">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span className="text-gray-500 sm:text-sm font-mono font-medium">Rs.</span>
+                </div>
+                <input
+                  type="number"
+                  name="shippingFee"
+                  min="0"
+                  step="1"
+                  value={settings.shippingFee}
+                  onChange={(e) => setSettings({ ...settings, shippingFee: Number(e.target.value) || 0 })}
+                  className="block w-full rounded-md border border-gray-300 pl-11 pr-4 py-2.5 text-sm font-mono focus:border-black focus:ring-1 focus:ring-black outline-none"
+                  placeholder="500"
+                />
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1.5">
+                Applied automatically at checkout for orders under the free threshold.
+              </p>
+            </div>
+
+            {/* Threshold & Shipping Rule Summary */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2.5 text-xs text-gray-600">
+              <p className="font-bold text-gray-800 uppercase tracking-wider text-[10px]">Active Shipping Rules</p>
+              
+              <div className="flex items-start gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mt-1 flex-shrink-0"></span>
+                <p>
+                  Orders <span className="font-semibold text-gray-900">under Rs. {extractFreeShippingThreshold(settings.topBannerText).toLocaleString()}</span>: Charged <span className="font-semibold text-gray-900 font-mono">Rs. {Number(settings.shippingFee || 0).toFixed(2)}</span> Standard Shipping.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mt-1 flex-shrink-0"></span>
+                <p>
+                  Orders <span className="font-semibold text-gray-900">Rs. {extractFreeShippingThreshold(settings.topBannerText).toLocaleString()} or above</span>: <span className="text-emerald-700 font-bold uppercase">Free Express Shipping</span>.
+                </p>
+              </div>
+
+              <p className="text-[10px] text-gray-400 pt-1 border-t border-gray-200">
+                Tip: The free shipping threshold is automatically extracted from your Marquee Banner Text above.
+              </p>
+            </div>
           </div>
         </div>
 

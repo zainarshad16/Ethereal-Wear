@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import HorizontalScroll from "@/components/HorizontalScroll";
 import WishlistButton from "@/components/WishlistButton";
 import HeroSlideshow from "@/components/HeroSlideshow";
+import ProductCard from "@/components/ProductCard";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SettingsService } from "@/server/services/settings.service";
@@ -104,58 +105,9 @@ export default async function Home() {
               View All
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {newArrivals.map((item) => (
-              <Link href={`/product/${item.id}`} key={item.id} className="group relative block">
-                <div className="relative aspect-[3/4] overflow-hidden bg-gray-50 mb-3 w-full">
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ${
-                      item.hoverImageUrl ? "group-hover:opacity-0" : "group-hover:scale-105"
-                    }`}
-                  />
-                  {item.hoverImageUrl && (
-                    <img
-                      src={item.hoverImageUrl}
-                      alt={`${item.name} Alternate`}
-                      className="object-cover w-full h-full absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
-                    />
-                  )}
-                  {item.isOnSale && (
-                    <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold tracking-widest px-2 py-1 uppercase z-20">
-                      SALE
-                    </div>
-                  )}
-                  <WishlistButton
-                    item={{
-                      id: item.id,
-                      name: item.name,
-                      price: item.price,
-                      imageUrl: item.imageUrl,
-                      hoverImageUrl: item.hoverImageUrl,
-                      category: item.category,
-                      isOnSale: item.isOnSale,
-                      salePercentage: item.salePercentage,
-                    }}
-                  />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 group-hover:underline">{item.name}</h3>
-                  <div className="mt-1 flex items-center space-x-2">
-                    {item.isOnSale && item.salePercentage ? (
-                      <>
-                        <span className="text-sm text-red-600 font-medium">
-                          Rs.{(item.price * (1 - item.salePercentage / 100)).toFixed(2)}
-                        </span>
-                        <span className="text-xs text-gray-400 line-through">Rs.{item.price.toFixed(2)}</span>
-                      </>
-                    ) : (
-                      <span className="text-sm text-gray-600">Rs.{item.price.toFixed(2)}</span>
-                    )}
-                  </div>
-                </div>
-              </Link>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+            {newArrivals.map((item, idx) => (
+              <ProductCard key={item.id} item={item} index={idx} />
             ))}
           </div>
         </section>

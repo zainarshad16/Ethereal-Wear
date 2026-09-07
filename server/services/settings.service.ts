@@ -25,6 +25,7 @@ export interface ReviewSetting {
 
 export interface StoreSettingsData {
   topBannerText: string;
+  shippingFee: number;
   heroHeading: string;
   heroSubheading: string;
   heroButtonText: string;
@@ -45,7 +46,8 @@ export class SettingsService {
 
       if (!settings) {
         return {
-          topBannerText: "FREE SHIPPING ON ALL ORDERS OVER RS. 100",
+          topBannerText: "FREE SHIPPING ON ALL ORDERS OVER RS. 1000",
+          shippingFee: 500,
           heroHeading: "The Summer Edit",
           heroSubheading: "Lightweight linens and effortless silhouettes.",
           heroButtonText: "DISCOVER NOW",
@@ -111,6 +113,7 @@ export class SettingsService {
 
     return {
       topBannerText: settings.topBannerText || "",
+      shippingFee: settings.shippingFee !== undefined && settings.shippingFee !== null ? Number(settings.shippingFee) : 500,
       heroHeading: settings.heroHeading || "",
       heroSubheading: settings.heroSubheading || "",
       heroButtonText: settings.heroButtonText || "",
@@ -124,7 +127,8 @@ export class SettingsService {
   } catch (error) {
     console.error("FAILED_TO_GET_STORE_SETTINGS:", error);
     return {
-      topBannerText: "FREE SHIPPING ON ALL ORDERS OVER RS. 100",
+      topBannerText: "FREE SHIPPING ON ALL ORDERS OVER RS. 1000",
+      shippingFee: 500,
       heroHeading: "The Summer Edit",
       heroSubheading: "Lightweight linens and effortless silhouettes.",
       heroButtonText: "DISCOVER NOW",
@@ -142,6 +146,7 @@ export class SettingsService {
     const updatePayload: any = {};
     
     if (data.topBannerText !== undefined) updatePayload.topBannerText = data.topBannerText;
+    if (data.shippingFee !== undefined) updatePayload.shippingFee = Number(data.shippingFee);
     if (data.heroHeading !== undefined) updatePayload.heroHeading = data.heroHeading;
     if (data.heroSubheading !== undefined) updatePayload.heroSubheading = data.heroSubheading;
     if (data.heroButtonText !== undefined) updatePayload.heroButtonText = data.heroButtonText;
@@ -158,13 +163,37 @@ export class SettingsService {
       updatePayload.reviews = JSON.stringify(data.reviews);
     }
 
-    return prisma.storeSettings.upsert({
-      where: { id: "global" },
-      update: updatePayload,
-      create: {
-        id: "global",
-        ...updatePayload
+    try {
+      return await prisma.storeSettings.upsert({
+        where: { id: "global" },
+        update: updatePayload,
+        create: {
+          id: "global",
+          ...updatePayload
+        }
+      });
+    } catch (err: any) {
+      if (err?.message?.includes("shippingFee") || err?.message?.includes("Unknown argument")) {
+        const { shippingFee, ...fallbackPayload } = updatePayload;
+        const res = await prisma.storeSettings.upsert({
+          where: { id: "global" },
+          update: fallbackPayload,
+          create: {
+            id: "global",
+            ...fallbackPayload
+          }
+        });
+        if (shippingFee !== undefined) {
+          try {
+            await prisma.$executeRawUnsafe(
+              `UPDATE "StoreSettings" SET "shippingFee" = $1 WHERE "id" = 'global'`,
+              Number(shippingFee)
+            );
+          } catch {}
+        }
+        return res;
       }
-    });
+      throw err;
+    }
   }
 }
