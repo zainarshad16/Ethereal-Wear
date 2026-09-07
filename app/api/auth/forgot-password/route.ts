@@ -34,12 +34,7 @@ export async function POST(req: Request) {
     // In a real app, send an email here
     // For this prototype, we just log it
     const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-    console.log("=========================================");
-    console.log(`PASSWORD RESET LINK FOR ${email}:`);
-    console.log(resetUrl);
-    console.log("=========================================");
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, resetUrl });
   } catch (error) {
     console.error("FORGOT PASSWORD ERROR:", error);
     return NextResponse.json({ error: "Failed to process request" }, { status: 500 });

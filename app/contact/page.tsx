@@ -44,17 +44,24 @@ export default function ContactPage() {
           
           <div className="space-y-6">
             <div>
+              <h3 className="text-sm font-bold tracking-widest uppercase mb-2">WhatsApp Support</h3>
+              <a
+                href="https://wa.me/923001234567?text=Hello%20Ethereal%20Wear"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-emerald-700 font-semibold text-sm hover:underline"
+              >
+                <span>💬 Chat on WhatsApp (+92 300 1234567)</span>
+              </a>
+              <p className="text-xs text-gray-500 mt-1">Instant response for order & sizing assistance</p>
+            </div>
+            <div>
               <h3 className="text-sm font-bold tracking-widest uppercase mb-2">Email</h3>
               <p className="text-gray-600">support@etherealwear.com</p>
             </div>
             <div>
-              <h3 className="text-sm font-bold tracking-widest uppercase mb-2">Phone</h3>
-              <p className="text-gray-600">+1 (800) 123-4567</p>
-              <p className="text-sm text-gray-500 mt-1">Mon-Fri, 9am-5pm EST</p>
-            </div>
-            <div>
               <h3 className="text-sm font-bold tracking-widest uppercase mb-2">Studio</h3>
-              <p className="text-gray-600">123 Fashion Avenue<br/>New York, NY 10001</p>
+              <p className="text-gray-600">Ethereal Wear Atelier<br/>Haute Couture Flagship</p>
             </div>
           </div>
         </div>

@@ -52,11 +52,9 @@ export const authOptions: NextAuthOptions = {
               image: safeImage,
             };
           } else {
-            console.log("Credentials auth failed: Incorrect password for ->", email);
             return null;
           }
         } catch (error) {
-          console.error("Credentials authorize error:", error);
           return null;
         }
       },

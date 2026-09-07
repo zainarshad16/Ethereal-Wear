@@ -99,14 +99,16 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { items, shippingDetails, paymentDetails } = body;
+    const { items, shippingDetails, paymentDetails, paymentMethod = "COD", paymentRef } = body;
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
-    if (!paymentDetails || !paymentDetails.cardNumber || !paymentDetails.expiry || !paymentDetails.cvc) {
-      return NextResponse.json({ error: "Payment details are required" }, { status: 400 });
+    if (paymentMethod === "CARD") {
+      if (!paymentDetails || !paymentDetails.cardNumber || !paymentDetails.expiry || !paymentDetails.cvc) {
+        return NextResponse.json({ error: "Card payment details are required" }, { status: 400 });
+      }
     }
 
     // 1. Stock Validation
@@ -152,22 +154,36 @@ export async function POST(req: Request) {
     const shippingFee = subtotal >= freeShippingThreshold ? 0 : standardShipping;
     const total = subtotal + shippingFee;
 
-    // 2. Process Payment via Authorize.net
-    const paymentResult = await processAuthorizeNetPayment({
-      amount: total.toFixed(2),
-      cardNumber: paymentDetails.cardNumber,
-      expiry: paymentDetails.expiry,
-      cvc: paymentDetails.cvc,
-      firstName: shippingDetails.firstName,
-      lastName: shippingDetails.lastName,
-      address: shippingDetails.address,
-      city: shippingDetails.city,
-      zipCode: shippingDetails.zipCode,
-      country: shippingDetails.country,
-    });
+    // 2. Process Payment based on selected paymentMethod
+    let transactionId = "TX_" + Date.now();
+    let orderStatus = "PENDING";
 
-    if (!paymentResult.success) {
-      return NextResponse.json({ error: `Payment failed: ${paymentResult.error}` }, { status: 400 });
+    if (paymentMethod === "CARD") {
+      const paymentResult = await processAuthorizeNetPayment({
+        amount: total.toFixed(2),
+        cardNumber: paymentDetails.cardNumber,
+        expiry: paymentDetails.expiry,
+        cvc: paymentDetails.cvc,
+        firstName: shippingDetails.firstName,
+        lastName: shippingDetails.lastName,
+        address: shippingDetails.address,
+        city: shippingDetails.city,
+        zipCode: shippingDetails.zipCode,
+        country: shippingDetails.country,
+      });
+
+      if (!paymentResult.success) {
+        return NextResponse.json({ error: `Card payment failed: ${paymentResult.error}` }, { status: 400 });
+      }
+      transactionId = paymentResult.transactionId || transactionId;
+      orderStatus = "PAID";
+    } else if (paymentMethod === "BANK_TRANSFER") {
+      transactionId = paymentRef ? `BANK_REF_${paymentRef}` : `BANK_${Date.now()}`;
+      orderStatus = "PENDING";
+    } else {
+      // Default: COD (Cash on Delivery)
+      transactionId = `COD_${Date.now()}`;
+      orderStatus = "PENDING";
     }
 
     // 3. Deduct Stock & Create Order
@@ -208,7 +224,7 @@ export async function POST(req: Request) {
       data: {
         userId,
         total,
-        status: "PAID",
+        status: orderStatus,
         items: {
           create: orderItemsData
         }
@@ -254,7 +270,7 @@ export async function POST(req: Request) {
       console.error("ASYNC_ORDER_EMAIL_ERROR:", emailErr);
     }
 
-    return NextResponse.json({ success: true, orderId: order.id, transactionId: paymentResult.transactionId });
+    return NextResponse.json({ success: true, orderId: order.id, transactionId });
   } catch (error: any) {
     console.error("ORDER CREATION ERROR:", error);
     return NextResponse.json({ error: "Failed to create order" }, { status: 500 });

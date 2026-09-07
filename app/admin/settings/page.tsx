@@ -15,6 +15,7 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState({
     topBannerText: "",
     shippingFee: 500,
+    whatsappNumber: "923001234567",
     heroHeading: "",
     heroSubheading: "",
     heroButtonText: "",
@@ -35,6 +36,7 @@ export default function AdminSettingsPage() {
         setSettings({
           topBannerText: data.topBannerText || "",
           shippingFee: data.shippingFee !== undefined && data.shippingFee !== null ? Number(data.shippingFee) : 500,
+          whatsappNumber: data.whatsappNumber || "923001234567",
           heroHeading: data.heroHeading || "",
           heroSubheading: data.heroSubheading || "",
           heroButtonText: data.heroButtonText || "",
@@ -248,6 +250,66 @@ export default function AdminSettingsPage() {
               <p className="text-[10px] text-gray-400 pt-1 border-t border-gray-200">
                 Tip: The free shipping threshold is automatically extracted from your Marquee Banner Text above.
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* WhatsApp Business & Customer Support Settings */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xl">💬</span>
+            <h2 className="text-xl font-semibold">WhatsApp Business & Support Number</h2>
+          </div>
+          <p className="text-xs text-gray-500 mb-5">
+            Set your official business WhatsApp number for customer order confirmations and direct checkout inquiries.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                WhatsApp Phone Number (with Country Code)
+              </label>
+              <div className="relative rounded-md shadow-xs">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span className="text-gray-500 sm:text-sm font-mono font-medium">📞</span>
+                </div>
+                <input
+                  type="text"
+                  name="whatsappNumber"
+                  value={settings.whatsappNumber}
+                  onChange={handleChange}
+                  className="block w-full rounded-md border border-gray-300 pl-10 pr-4 py-2.5 text-sm font-mono focus:border-black focus:ring-1 focus:ring-black outline-none"
+                  placeholder="e.g. 923001234567 or +92 300 1234567"
+                />
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1.5">
+                Example format: <code className="font-mono text-gray-700">923001234567</code> (digits only, no spaces or special symbols).
+              </p>
+            </div>
+
+            {/* WhatsApp Preview Card */}
+            <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-lg p-4 space-y-2 text-xs text-gray-700">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#166534] uppercase tracking-wider text-[10px]">Active WhatsApp Link</span>
+                <span className="w-2 h-2 rounded-full bg-[#22C55E]"></span>
+              </div>
+              <p className="font-mono text-xs text-gray-900 font-semibold truncate">
+                https://wa.me/{settings.whatsappNumber.replace(/[^\d+]/g, "").replace(/^\+/, "")}
+              </p>
+              <p className="text-[11px] text-gray-600">
+                Customers who finish checkout will be able to confirm their order directly with this WhatsApp number with 1 click.
+              </p>
+              {settings.whatsappNumber && (
+                <a
+                  href={`https://wa.me/${settings.whatsappNumber.replace(/[^\d+]/g, "").replace(/^\+/, "")}?text=Hello%20Ethereal%20Wear`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#15803D] hover:underline pt-1"
+                >
+                  <span>Test WhatsApp Link</span>
+                  <span>&rarr;</span>
+                </a>
+              )}
             </div>
           </div>
         </div>

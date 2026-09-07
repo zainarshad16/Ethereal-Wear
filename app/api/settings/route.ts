@@ -15,13 +15,26 @@ export async function GET() {
       });
     }
 
-    if (settings && (settings.shippingFee === undefined || settings.shippingFee === null)) {
-      try {
-        const rawRes: any = await prisma.$queryRawUnsafe(`SELECT "shippingFee" FROM "StoreSettings" WHERE "id" = 'global' LIMIT 1`);
-        if (rawRes && rawRes[0] && rawRes[0].shippingFee !== undefined) {
+    // Ensure raw fields (shippingFee, whatsappNumber) are retrieved safely even if Prisma client cache is syncing
+    try {
+      const rawRes: any = await prisma.$queryRawUnsafe(`SELECT "shippingFee", "whatsappNumber" FROM "StoreSettings" WHERE "id" = 'global' LIMIT 1`);
+      if (rawRes && rawRes[0]) {
+        if (rawRes[0].shippingFee !== undefined && rawRes[0].shippingFee !== null) {
           settings.shippingFee = Number(rawRes[0].shippingFee);
         }
+        if (rawRes[0].whatsappNumber) {
+          settings.whatsappNumber = String(rawRes[0].whatsappNumber);
+        }
+      }
+    } catch {
+      // Ensure column exists in DB
+      try {
+        await prisma.$executeRawUnsafe(`ALTER TABLE "StoreSettings" ADD COLUMN IF NOT EXISTS "whatsappNumber" TEXT DEFAULT '923001234567'`);
       } catch {}
+    }
+
+    if (!settings.whatsappNumber) {
+      settings.whatsappNumber = "923001234567";
     }
 
     return NextResponse.json(settings);
@@ -38,11 +51,21 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Ensure whatsappNumber column exists in DB
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "StoreSettings" ADD COLUMN IF NOT EXISTS "whatsappNumber" TEXT DEFAULT '923001234567'`);
+    } catch {}
+
     const body = await req.json();
     
     const updateData: any = {};
     if (body.topBannerText !== undefined) updateData.topBannerText = String(body.topBannerText);
     if (body.shippingFee !== undefined) updateData.shippingFee = Number(body.shippingFee) || 0;
+    if (body.whatsappNumber !== undefined) {
+      // Clean digits only or standard international phone format
+      const cleanedPhone = String(body.whatsappNumber).replace(/[^\d+]/g, "").replace(/^\+/, "");
+      updateData.whatsappNumber = cleanedPhone || "923001234567";
+    }
     if (body.heroHeading !== undefined) updateData.heroHeading = String(body.heroHeading);
     if (body.heroSubheading !== undefined) updateData.heroSubheading = String(body.heroSubheading);
     if (body.heroButtonText !== undefined) updateData.heroButtonText = String(body.heroButtonText);
@@ -60,31 +83,36 @@ export async function PUT(req: Request) {
         create: { ...updateData, id: "global" }
       });
     } catch (upsertError: any) {
-      // Fallback if the running Node server process has a cached Prisma client definition without shippingFee
-      if (
-        upsertError?.message?.includes("shippingFee") ||
-        upsertError?.message?.includes("Unknown argument")
-      ) {
-        const { shippingFee, ...fallbackData } = updateData;
-        settings = await prisma.storeSettings.upsert({
-          where: { id: "global" },
-          update: fallbackData,
-          create: { ...fallbackData, id: "global" }
-        });
+      // Fallback if the running Node server process has a cached Prisma client definition without newer fields
+      const { shippingFee, whatsappNumber, ...fallbackData } = updateData;
+      settings = await prisma.storeSettings.upsert({
+        where: { id: "global" },
+        update: fallbackData,
+        create: { ...fallbackData, id: "global" }
+      });
 
-        if (shippingFee !== undefined) {
-          try {
-            await prisma.$executeRawUnsafe(
-              `UPDATE "StoreSettings" SET "shippingFee" = $1 WHERE "id" = 'global'`,
-              Number(shippingFee)
-            );
-            settings.shippingFee = Number(shippingFee);
-          } catch (rawError) {
-            console.error("RAW SHIPPING_FEE UPDATE ERROR:", rawError);
-          }
+      if (shippingFee !== undefined) {
+        try {
+          await prisma.$executeRawUnsafe(
+            `UPDATE "StoreSettings" SET "shippingFee" = $1 WHERE "id" = 'global'`,
+            Number(shippingFee)
+          );
+          settings.shippingFee = Number(shippingFee);
+        } catch (rawError) {
+          console.error("RAW SHIPPING_FEE UPDATE ERROR:", rawError);
         }
-      } else {
-        throw upsertError;
+      }
+
+      if (whatsappNumber !== undefined) {
+        try {
+          await prisma.$executeRawUnsafe(
+            `UPDATE "StoreSettings" SET "whatsappNumber" = $1 WHERE "id" = 'global'`,
+            String(whatsappNumber)
+          );
+          settings.whatsappNumber = String(whatsappNumber);
+        } catch (rawError) {
+          console.error("RAW WHATSAPP UPDATE ERROR:", rawError);
+        }
       }
     }
 
