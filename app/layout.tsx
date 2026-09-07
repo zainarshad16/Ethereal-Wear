@@ -94,6 +94,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: "google6c6a43d36bff21dd",
+  },
 };
 
 import { Providers } from "@/components/Providers";
