@@ -59,8 +59,15 @@ export default function AtelierChatbot() {
     }
   }, [isOpen]);
 
-  // Hide on admin routes
-  if (pathname && pathname.startsWith("/admin")) {
+  // Hide on admin and auth routes
+  if (
+    pathname &&
+    (pathname.startsWith("/admin") ||
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname === "/forgot-password" ||
+      pathname === "/reset-password")
+  ) {
     return null;
   }
 

@@ -20,8 +20,15 @@ export default function FloatingWhatsApp() {
       .catch(() => {});
   }, []);
 
-  // Hide on admin routes to keep dashboard clear
-  if (pathname && pathname.startsWith("/admin")) {
+  // Hide on admin and auth routes to keep screen completely clear
+  if (
+    pathname &&
+    (pathname.startsWith("/admin") ||
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname === "/forgot-password" ||
+      pathname === "/reset-password")
+  ) {
     return null;
   }
 
