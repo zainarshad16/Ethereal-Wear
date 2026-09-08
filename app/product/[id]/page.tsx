@@ -38,9 +38,36 @@ export async function generateMetadata({
     ...(product.images && Array.isArray(product.images) ? product.images : []),
   ].filter(Boolean);
 
+  const productKeywords = [
+    // Product-specific keywords
+    product.name.toLowerCase(),
+    `${product.name.toLowerCase()} buy online`,
+    `${product.name.toLowerCase()} price in pakistan`,
+    `${product.name.toLowerCase()} online shopping`,
+    product.category ? `${product.category.toLowerCase()} online pakistan` : "designer wear pakistan",
+    product.category ? `buy ${product.category.toLowerCase()}` : "luxury wear",
+    // Pakistani Casual & E-Commerce keywords
+    "pakistani dresses online",
+    "ready to wear dresses pakistan",
+    "stitched suits cash on delivery",
+    "pret wear online",
+    "casual wear clothes",
+    "party wear dress online",
+    "best clothing brand in pakistan",
+    "fast delivery clothing pakistan",
+    // Professional keywords
+    "haute couture garment",
+    "artisanal tailoring",
+    "contemporary silhouette",
+    "ethereal wear collection",
+    "luxury prêt-à-porter",
+    "bespoke atelier",
+  ];
+
   return {
     title: product.name,
     description: cleanDescription,
+    keywords: productKeywords,
     alternates: {
       canonical: `/product/${product.id}`,
     },

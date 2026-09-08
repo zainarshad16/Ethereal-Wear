@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ProductService } from "@/server/services/product.service";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -6,6 +7,52 @@ import MobileFilters from "@/components/MobileFilters";
 import ProductCard from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Shop All Collections",
+  description:
+    "Explore the full collection of luxury garments, minimalist outerwear, bespoke dresses, and artisanal essentials at Ethereal Wear.",
+  keywords: [
+    // Pakistani casual & shopping keywords
+    "online clothes shopping pakistan",
+    "pakistani dresses online",
+    "stitched suits online pakistan",
+    "casual wear dresses",
+    "pret collection pakistan",
+    "ready to wear collection",
+    "co ord sets pakistan",
+    "summer shirts for men pakistan",
+    "women western wear pakistan",
+    "cash on delivery clothing",
+    "sale on brands in pakistan",
+    "latest dress design 2026",
+    // Professional keywords
+    "luxury ready-to-wear",
+    "designer fashion collection",
+    "couture menswear",
+    "couture womenswear",
+    "artisanal garments",
+    "minimalist aesthetics",
+    "capsule collection",
+    // General keywords
+    "buy designer clothes online",
+    "party wear",
+    "formal wear",
+    "casual luxury shirts",
+    "summer collection",
+    "winter collection",
+  ],
+  alternates: {
+    canonical: "/shop",
+  },
+  openGraph: {
+    title: "Shop All Collections | Ethereal Wear",
+    description: "Explore the full collection of luxury garments and artisanal essentials.",
+    url: "/shop",
+    siteName: "Ethereal Wear",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
+  },
+};
 
 export default async function ShopPage({
   searchParams,

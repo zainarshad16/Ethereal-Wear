@@ -29,15 +29,48 @@ export const metadata: Metadata = {
   description:
     "Discover Ethereal Wear, a luxury fashion house redefining haute couture with timeless forms, sculptural silhouettes, and uncompromising artisanal craftsmanship.",
   keywords: [
-    "luxury fashion",
+    // Pakistani Casual & E-Commerce Keywords
+    "online shopping pakistan",
+    "pakistani clothing brand",
+    "casual wear pakistan",
+    "pret wear online pakistan",
+    "ready to wear dresses pakistan",
+    "stitched dresses online",
+    "co-ord sets for women pakistan",
+    "summer linen collection",
+    "winter collection pakistan",
+    "western wear for women in pakistan",
+    "oversized tees pakistan",
+    "drop shoulder shirts",
+    "mens casual shirts pakistan",
+    "kurti and trousers set",
+    "party wear stitched suits",
+    "cash on delivery pakistan",
+    "cash on delivery lahore",
+    "cash on delivery karachi",
+    "cash on delivery islamabad",
+    "fast delivery clothing brand pakistan",
+    "designer sale online pakistan",
+    "ethereal wear pakistan",
+    // Professional & Haute Couture Keywords
     "haute couture",
-    "designer clothing",
-    "minimalist luxury",
-    "ethereal wear",
-    "atelier",
-    "luxury menswear",
-    "luxury womenswear",
+    "luxury fashion house",
+    "artisanal tailoring",
     "contemporary silhouettes",
+    "bespoke atelier",
+    "minimalist luxury",
+    "designer menswear",
+    "designer womenswear",
+    "sustainable silk",
+    "structural garments",
+    "monochrome couture",
+    "runway fashion",
+    "luxury prêt-à-porter",
+    "capsule collection",
+    // Popular Global Shopper Keywords
+    "buy luxury clothes online",
+    "designer dresses online",
+    "high end fashion boutique",
   ],
   authors: [{ name: "Ethereal Wear Atelier" }],
   creator: "Ethereal Wear",
@@ -107,6 +140,8 @@ export const metadata: Metadata = {
 
 import { Providers } from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import AtelierChatbot from "@/components/AtelierChatbot";
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -116,6 +151,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col overflow-x-hidden w-full">
         <Providers>{children}</Providers>
+        <FloatingWhatsApp />
+        <AtelierChatbot />
         <Toaster position="bottom-center" />
       </body>
     </html>

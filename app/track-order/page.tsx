@@ -1,4 +1,5 @@
 import React from "react";
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -9,6 +10,35 @@ import OrderTrackingSearch from "@/components/OrderTrackingSearch";
 import { ShoppingBagIcon, ArrowRightIcon, UserIcon } from "@heroicons/react/24/outline";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Track Your Order",
+  description:
+    "Check live shipping progress, parcel transit milestones, and courier delivery status for your Ethereal Wear orders.",
+  keywords: [
+    // Professional keywords
+    "luxury parcel tracking",
+    "couture shipment milestones",
+    "express insured logistics tracking",
+    // Normal keywords
+    "track order",
+    "track my clothes delivery",
+    "order tracking online",
+    "courier tracking clothing",
+    "ethereal wear tracking",
+    "where is my package",
+  ],
+  alternates: {
+    canonical: "/track-order",
+  },
+  openGraph: {
+    title: "Track Your Order | Ethereal Wear",
+    description: "Check live shipping progress and courier delivery status for your orders.",
+    url: "/track-order",
+    siteName: "Ethereal Wear",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
+  },
+};
 
 export default async function TrackOrderPage() {
   const session = await getServerSession(authOptions);

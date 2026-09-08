@@ -1,5 +1,35 @@
+import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "Shipping & Returns Policy",
+  description:
+    "Review our delivery timeframes, nationwide express courier shipping, Cash on Delivery policy, and 3-day hassle-free return guidelines.",
+  keywords: [
+    // Professional keywords
+    "luxury garment logistics",
+    "express insured shipping",
+    "couture exchange policy",
+    // Normal keywords
+    "free delivery dresses",
+    "cash on delivery rules",
+    "clothing return policy",
+    "delivery charges online clothes",
+    "fast shipping clothing store",
+    "shipping time ethereal wear",
+  ],
+  alternates: {
+    canonical: "/shipping",
+  },
+  openGraph: {
+    title: "Shipping & Returns Policy | Ethereal Wear",
+    description: "Review our delivery timeframes, express courier shipping, and 3-day hassle-free return guidelines.",
+    url: "/shipping",
+    siteName: "Ethereal Wear",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
+  },
+};
 
 export default function ShippingPage() {
   return (

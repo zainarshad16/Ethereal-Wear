@@ -1,5 +1,37 @@
+import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "Our Story & Atelier",
+  description:
+    "Learn about Ethereal Wear, our dedication to sustainable craftsmanship, timeless minimalism, and architectural haute couture silhouettes.",
+  keywords: [
+    // Professional keywords
+    "haute couture atelier",
+    "sustainable luxury fashion",
+    "artisanal craftsmanship",
+    "minimalist design philosophy",
+    "ethical clothing manufacturing",
+    "couture heritage",
+    // Normal keywords
+    "about ethereal wear",
+    "luxury clothing brand story",
+    "high quality designer clothes",
+    "pakistan luxury fashion house",
+    "designer atelier",
+  ],
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    title: "Our Story & Atelier | Ethereal Wear",
+    description: "Learn about our commitment to artisanal craftsmanship, sustainable luxury, and timeless design.",
+    url: "/about",
+    siteName: "Ethereal Wear",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
+  },
+};
 
 export default function AboutPage() {
   return (

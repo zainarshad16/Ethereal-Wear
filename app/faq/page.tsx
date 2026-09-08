@@ -1,27 +1,56 @@
+import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "Frequently Asked Questions (FAQ)",
+  description:
+    "Find answers to frequently asked questions about size guides, order tracking, Cash on Delivery payment, returns, and international shipping.",
+  keywords: [
+    // Professional keywords
+    "haute couture sizing guide",
+    "bespoke garment alterations",
+    "luxury couture FAQ",
+    // Normal keywords
+    "how to choose dress size",
+    "cash on delivery questions",
+    "order cancel clothing",
+    "exchange size ethereal wear",
+    "frequently asked questions clothes",
+  ],
+  alternates: {
+    canonical: "/faq",
+  },
+  openGraph: {
+    title: "Frequently Asked Questions (FAQ) | Ethereal Wear",
+    description: "Find answers regarding sizing, tracking, payment methods, and return policy.",
+    url: "/faq",
+    siteName: "Ethereal Wear",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
+  },
+};
 
 export default function FAQPage() {
   const faqs = [
     {
       question: "What is your sizing like?",
-      answer: "Our sizes run true to size. We recommend checking our detailed size guide on each product page to find your perfect fit. If you are between sizes, we suggest sizing up for a more relaxed look."
-    },
-    {
-      question: "Do you ship internationally?",
-      answer: "Yes, we ship to most countries worldwide! International shipping rates and delivery times vary depending on the destination and will be calculated at checkout."
-    },
-    {
-      question: "How can I track my order?",
-      answer: "Once your order has been dispatched, you will receive a shipping confirmation email containing a tracking link. You can also view your order status by logging into your account."
+      answer: "Our sizes run true to size with tailored luxury proportions. We recommend checking the size selectors on each product page or messaging our WhatsApp concierge for custom sizing recommendations."
     },
     {
       question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, Apple Pay, and Google Pay."
+      answer: "We support Cash on Delivery (COD) for seamless doorstep payment, as well as direct Bank Transfer and WhatsApp order confirmation."
     },
     {
-      question: "Can I modify or cancel my order?",
-      answer: "We process orders very quickly. If you need to modify or cancel your order, please contact us immediately. Once the order has been processed by our warehouse, we can no longer make changes."
+      question: "How can I track my order?",
+      answer: "Use our official Track Order page (/track-order) anytime with your 6-digit Order ID to view real-time courier milestone updates."
+    },
+    {
+      question: "Do you ship nationwide with express delivery?",
+      answer: "Yes, we provide expedited delivery across all cities. Standard orders arrive in 2-4 business days with full transit insurance."
+    },
+    {
+      question: "Can I exchange or return my items?",
+      answer: "We offer a 3-day hassle-free exchange and return window if the garment is unworn, unwashed, and retains all original designer tags."
     }
   ];
 
